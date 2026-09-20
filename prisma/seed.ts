@@ -3,7 +3,11 @@ import { PrismaClient, type CategoryType } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { articles, categories, events, issues, photo, properties, videos } from "./seed-data";
 
-process.loadEnvFile?.(".env");
+try {
+  process.loadEnvFile?.(".env");
+} catch {
+  // sem .env: as variaveis vem do ambiente
+}
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
