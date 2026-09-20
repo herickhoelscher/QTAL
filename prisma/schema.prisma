@@ -253,6 +253,12 @@ model ApiSettings {
   cubValue            Decimal? @db.Decimal(12, 2)
   cubReference        String?
   cubUpdatedAt        DateTime?
+  /// Variacao percentual no mes, quando a fonte informa.
+  cubChangePercent    Decimal? @db.Decimal(6, 2)
+  /// De onde veio o valor: "sinduscon", "sinapi" ou "manual".
+  cubSource           String?
+  /// Com isso ligado, o job mensal sobrescreve o valor com o do Sinduscon.
+  cubAutoUpdate       Boolean  @default(true)
   gtmContainerId      String?
   whatsappNumber      String   @default("5545999999999")
   whatsappMessage     String   @default("Ola! Gostaria de assinar a revista.")

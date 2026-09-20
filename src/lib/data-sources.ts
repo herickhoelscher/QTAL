@@ -22,8 +22,8 @@ export type CubData = {
   reference: string | null;
   updatedAt: string | null;
   changePercent: number | null;
-  /** "manual" = valor digitado no painel; "sinapi" = custo medio m2 do IBGE. */
-  source: "manual" | "sinapi" | null;
+  /** De onde veio: Sinduscon (CUB de verdade), digitado no painel, ou SINAPI. */
+  source: "sinduscon" | "manual" | "sinapi" | null;
 };
 
 /**
@@ -252,8 +252,9 @@ async function getSinapi(uf: string): Promise<CubData | null> {
  * O valor e apurado mensalmente pelos Sinduscons estaduais (ex.: Sinduscon-PR)
  * e publicado em PDF/planilha, sem endpoint de consumo.
  *
- * Por isso a ordem e: (1) valor digitado em /admin/configuracoes, que continua
- * sendo o CUB de verdade; (2) se estiver vazio, o custo medio do m2 do SINAPI
+ * A ordem e: (1) o valor gravado em ApiSettings — que o job mensal preenche
+ * sozinho lendo a pagina do Sinduscon (ver lib/cub-source.ts) e que o cliente
+ * pode sobrescrever a mao; (2) se estiver vazio, o custo medio do m2 do SINAPI
  * pela API do IBGE, devidamente rotulado — assim a barra nunca fica com "--"
  * so porque ninguem atualizou o indice no mes.
  */
@@ -265,8 +266,9 @@ export async function getCub(): Promise<CubData> {
       value: Number(settings.cubValue),
       reference: settings.cubReference,
       updatedAt: settings.cubUpdatedAt ? settings.cubUpdatedAt.toISOString() : null,
-      changePercent: null,
-      source: "manual",
+      changePercent:
+        settings.cubChangePercent !== null ? Number(settings.cubChangePercent) : null,
+      source: settings.cubSource === "sinduscon" ? "sinduscon" : "manual",
     };
   }
 

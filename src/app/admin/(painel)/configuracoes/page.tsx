@@ -29,6 +29,8 @@ export default async function AdminSettingsPage() {
           cubValue: settings.cubValue ? String(settings.cubValue) : "",
           cubReference: settings.cubReference,
           cubUpdatedAt: settings.cubUpdatedAt ? formatDateShort(settings.cubUpdatedAt) : null,
+          cubSource: settings.cubSource,
+          cubAutoUpdate: settings.cubAutoUpdate,
           gtmContainerId: settings.gtmContainerId,
           whatsappNumber: settings.whatsappNumber,
           whatsappMessage: settings.whatsappMessage,

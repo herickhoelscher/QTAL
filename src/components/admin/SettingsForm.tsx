@@ -1,9 +1,10 @@
 "use client";
 
 import { useActionState } from "react";
-import { saveSettings } from "@/app/admin/actions/settings";
+import { refreshCubNow, saveSettings } from "@/app/admin/actions/settings";
 import { ImageField } from "@/components/admin/ImageField";
 import {
+  Checkbox,
   Field,
   FormSection,
   SubmitButton,
@@ -22,6 +23,8 @@ export type SettingsFormData = {
   cubValue: string;
   cubReference: string | null;
   cubUpdatedAt: string | null;
+  cubSource: string | null;
+  cubAutoUpdate: boolean;
   gtmContainerId: string | null;
   whatsappNumber: string;
   whatsappMessage: string;
@@ -134,7 +137,7 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
         <Field
           label="Valor do CUB (R$/m²)"
           htmlFor="cubValue"
-          hint="Não existe API pública do CUB: o valor é publicado mensalmente pelo Sinduscon. Atualize aqui quando sair o novo índice — ex.: 2845,71. Se deixar em branco, a barra exibe o custo médio do m² do SINAPI/IBGE, atualizado sozinho e identificado como tal."
+          hint="Preenchido sozinho todo mês pelo índice do Sinduscon Paraná Oeste. Só edite se quiser fixar outro valor — ex.: 2845,71. Em branco, a barra cai para o custo médio do m² do SINAPI/IBGE, identificado como tal."
         >
           <TextInput id="cubValue" name="cubValue" inputMode="decimal" defaultValue={settings.cubValue} />
         </Field>
@@ -151,9 +154,36 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
           />
         </Field>
 
-        {settings.cubUpdatedAt ? (
-          <p className="text-xs text-muted">Última atualização do CUB: {settings.cubUpdatedAt}</p>
-        ) : null}
+        <Checkbox
+          name="cubAutoUpdate"
+          label="Atualizar o CUB automaticamente todo mês"
+          hint="Busca o índice na tabela do Sinduscon Paraná Oeste entre os dias 2 e 6 de cada mês. Desligue se preferir digitar o valor à mão."
+          defaultChecked={settings.cubAutoUpdate}
+        />
+
+        <div className="flex flex-wrap items-center gap-4 border-l-2 border-line bg-surface-alt p-3">
+          <div className="text-xs text-muted">
+            {settings.cubUpdatedAt ? (
+              <>
+                Última atualização: {settings.cubUpdatedAt}
+                {settings.cubSource === "sinduscon"
+                  ? " · buscado no Sinduscon"
+                  : settings.cubSource === "manual"
+                    ? " · digitado no painel"
+                    : null}
+              </>
+            ) : (
+              "O CUB ainda não foi atualizado nenhuma vez."
+            )}
+          </div>
+          <button
+            type="submit"
+            formAction={refreshCubNow}
+            className="eyebrow ml-auto border border-line bg-surface px-4 py-2 hover:border-brand hover:text-brand"
+          >
+            Buscar CUB agora
+          </button>
+        </div>
       </FormSection>
 
       <FormSection title="Assinatura e contato">

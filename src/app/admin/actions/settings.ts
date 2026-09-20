@@ -47,6 +47,9 @@ export async function saveSettings(
     currencyApiProvider: text(formData, "currencyApiProvider") || "awesomeapi",
     cubValue,
     cubReference: optional(formData, "cubReference"),
+    cubAutoUpdate: formData.get("cubAutoUpdate") === "on",
+    // Valor digitado a mao deixa de ser "sinduscon": passa a ser manual.
+    cubSource: cubChanged ? "manual" : (current?.cubSource ?? null),
     // A data de referencia so avanca quando o valor muda de fato.
     cubUpdatedAt: cubChanged ? new Date() : current?.cubUpdatedAt,
     gtmContainerId: optional(formData, "gtmContainerId"),
@@ -68,4 +71,19 @@ export async function saveSettings(
 
   revalidatePath("/", "layout");
   return { success: "Configurações salvas." };
+}
+
+
+/**
+ * Busca o CUB agora, sob demanda, pelo botao do painel.
+ *
+ * Passa force: true porque aqui a acao e explicita — mesmo com a atualizacao
+ * automatica desligada, quem clicou quer o numero novo.
+ */
+export async function refreshCubNow(): Promise<void> {
+  await requireAdmin();
+  const { refreshCub } = await import("@/lib/cub-source");
+  await refreshCub({ force: true });
+  revalidatePath("/admin/configuracoes");
+  revalidatePath("/", "layout");
 }
