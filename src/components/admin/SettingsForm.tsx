@@ -7,6 +7,7 @@ import {
   Checkbox,
   Field,
   FormSection,
+  Select,
   SubmitButton,
   TextArea,
   TextInput,
@@ -25,6 +26,7 @@ export type SettingsFormData = {
   cubUpdatedAt: string | null;
   cubSource: string | null;
   cubAutoUpdate: boolean;
+  cubIndex: string;
   gtmContainerId: string | null;
   whatsappNumber: string;
   whatsappMessage: string;
@@ -154,6 +156,17 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
           />
         </Field>
 
+        <Field
+          label="Qual índice do CUB exibir"
+          htmlFor="cubIndex"
+          hint="Use o regional se o portal anuncia só no oeste do Paraná — ele acompanha melhor o custo daqui. Use o estadual se houver imóveis de outras regiões do estado."
+        >
+          <Select id="cubIndex" name="cubIndex" defaultValue={settings.cubIndex}>
+            <option value="CUBOESTE/PR">Regional — Oeste do Paraná (CUBOESTE/PR)</option>
+            <option value="CUB/PR">Estadual — Paraná inteiro (CUB/PR)</option>
+          </Select>
+        </Field>
+
         <Checkbox
           name="cubAutoUpdate"
           label="Atualizar o CUB automaticamente todo mês"
@@ -167,7 +180,7 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
               <>
                 Última atualização: {settings.cubUpdatedAt}
                 {settings.cubSource === "sinduscon"
-                  ? " · buscado no Sinduscon"
+                  ? ` · ${settings.cubIndex}, buscado no Sinduscon`
                   : settings.cubSource === "manual"
                     ? " · digitado no painel"
                     : null}

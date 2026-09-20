@@ -257,6 +257,8 @@ model ApiSettings {
   cubChangePercent    Decimal? @db.Decimal(6, 2)
   /// De onde veio o valor: "sinduscon", "sinapi" ou "manual".
   cubSource           String?
+  /// Qual indice buscar: CUBOESTE/PR (regional) ou CUB/PR (estadual).
+  cubIndex            String   @default("CUBOESTE/PR")
   /// Com isso ligado, o job mensal sobrescreve o valor com o do Sinduscon.
   cubAutoUpdate       Boolean  @default(true)
   gtmContainerId      String?

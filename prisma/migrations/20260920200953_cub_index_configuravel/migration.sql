@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "ApiSettings" ADD COLUMN     "cubIndex" TEXT NOT NULL DEFAULT 'CUBOESTE/PR';

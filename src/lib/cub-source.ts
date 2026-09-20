@@ -16,13 +16,15 @@ import "server-only";
 
 const SOURCE_URL = "https://sindusconparanaoeste.com.br/indicadores";
 
+export type CubIndex = "CUBOESTE/PR" | "CUB/PR";
+
 export type CubReading = {
   value: number;
   /** Mes de referencia ja formatado, ex.: "agosto/2026". */
   reference: string;
   changePercent: number | null;
-  /** Indice lido: regional de Toledo ou estadual. */
-  index: "CUBOESTE/PR" | "CUB/PR";
+  /** Indice efetivamente lido. */
+  index: CubIndex;
   sourceUrl: string;
 };
 
@@ -51,7 +53,7 @@ function parseNumber(raw: string): number | null {
  * <td>CUBOESTE/PR</td><td>03/08/2026</td><td>2810,49</td><td>3,44%</td>...
  * entao ancoramos no nome do indice e pegamos as tres celulas seguintes.
  */
-function readRow(html: string, index: "CUBOESTE/PR" | "CUB/PR"): CubReading | null {
+function readRow(html: string, index: CubIndex): CubReading | null {
   const anchor = html.indexOf(index + "</td>");
   if (anchor < 0) return null;
 
@@ -76,10 +78,15 @@ function readRow(html: string, index: "CUBOESTE/PR" | "CUB/PR"): CubReading | nu
 }
 
 /**
- * Busca o CUB mais recente. Prefere o indice regional (CUBOESTE/PR) e cai para
- * o estadual (CUB/PR) quando o primeiro nao estiver na pagina.
+ * Busca o CUB mais recente.
+ *
+ * Qual indice usar e decisao editorial, nao tecnica: o regional (CUBOESTE/PR)
+ * e mais preciso para quem anuncia so no oeste do estado; o estadual (CUB/PR)
+ * faz mais sentido quando o portal lista imoveis de outras regioes do Parana.
+ * Por isso vem das configuracoes, com o outro servindo de reserva caso a linha
+ * escolhida nao esteja na pagina.
  */
-export async function fetchCub(): Promise<CubReading | null> {
+export async function fetchCub(preferido: CubIndex = "CUBOESTE/PR"): Promise<CubReading | null> {
   try {
     const res = await fetch(SOURCE_URL, {
       headers: {
@@ -95,7 +102,8 @@ export async function fetchCub(): Promise<CubReading | null> {
     }
 
     const html = await res.text();
-    return readRow(html, "CUBOESTE/PR") ?? readRow(html, "CUB/PR");
+    const reserva: CubIndex = preferido === "CUBOESTE/PR" ? "CUB/PR" : "CUBOESTE/PR";
+    return readRow(html, preferido) ?? readRow(html, reserva);
   } catch (error) {
     console.error("[cub] falha ao ler a pagina do Sinduscon:", error);
     return null;
@@ -120,7 +128,7 @@ export async function refreshCub(
     return { ok: false, reason: "atualização automática desligada no painel" };
   }
 
-  const reading = await fetchCub();
+  const reading = await fetchCub((settings?.cubIndex as CubIndex) ?? "CUBOESTE/PR");
   if (!reading) return { ok: false, reason: "não foi possível ler a página do Sinduscon" };
 
   await prisma.apiSettings.upsert({
@@ -131,6 +139,7 @@ export async function refreshCub(
       cubReference: reading.reference,
       cubChangePercent: reading.changePercent,
       cubSource: "sinduscon",
+      cubIndex: reading.index,
       cubUpdatedAt: new Date(),
     },
     update: {
@@ -138,6 +147,7 @@ export async function refreshCub(
       cubReference: reading.reference,
       cubChangePercent: reading.changePercent,
       cubSource: "sinduscon",
+      cubIndex: reading.index,
       cubUpdatedAt: new Date(),
     },
   });

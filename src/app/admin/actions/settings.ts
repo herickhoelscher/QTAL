@@ -48,6 +48,7 @@ export async function saveSettings(
     cubValue,
     cubReference: optional(formData, "cubReference"),
     cubAutoUpdate: formData.get("cubAutoUpdate") === "on",
+    cubIndex: text(formData, "cubIndex") === "CUB/PR" ? "CUB/PR" : "CUBOESTE/PR",
     // Valor digitado a mao deixa de ser "sinduscon": passa a ser manual.
     cubSource: cubChanged ? "manual" : (current?.cubSource ?? null),
     // A data de referencia so avanca quando o valor muda de fato.
