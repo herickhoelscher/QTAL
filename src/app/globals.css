@@ -1,0 +1,266 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------
+   Design system — secao 04 da especificacao tecnica.
+   A paleta abaixo e o placeholder do documento; ao receber a marca
+   real do cliente, basta trocar os seis valores deste bloco.
+   --------------------------------------------------------------- */
+@theme {
+  --color-ink: #1a1a1a;
+  --color-brand: #c81e2c;
+  --color-brand-dark: #9c1622;
+  --color-accent: #c98866;
+  /* Mesma familia do accent, escurecido para texto sobre fundo claro:
+     #c98866 tem contraste 2,9:1 (reprova em WCAG AA); este tem 5,4:1. */
+  --color-accent-text: #9c5a2c;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f7f5f2;
+  --color-muted: #6b6b6b;
+  --color-line: #e4e0da;
+
+  --font-display: var(--font-playfair), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-inter), Helvetica, Arial, sans-serif;
+
+  --spacing-gutter: 1.5rem;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Foco sempre visivel — requisito de acessibilidade do checklist de QA. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@utility container-portal {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+
+/* Container dos feeds. Em telas grandes abre ate 1680px para caber a terceira
+   coluna do masonry sem encolher o card: cada um fica com ~510px, mais largo
+   do que os 608px de duas colunas pareciam prometer em 1280px. O texto
+   corrido (materia, imovel) continua no container-portal, que preserva a
+   medida de leitura. */
+@utility container-wide {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+
+  @media (width >= 90rem) {
+    max-width: 1680px;
+    padding-inline: 2.5rem;
+  }
+}
+
+/* Etiqueta de categoria: sans uppercase com letter-spacing amplo. */
+@utility eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Grid masonry do feed de Materias/Eventos, inspirado na DSTQ. Usa colunas CSS
+   para preservar alturas variaveis sem JS.
+   1 coluna no celular, 2 no tablet/notebook e 3 a partir de 1440px — largura em
+   que o container-wide ja abriu o suficiente para a terceira coluna entrar sem
+   espremer o card. */
+@utility masonry-2 {
+  column-count: 1;
+  column-gap: 2rem;
+
+  @media (width >= 48rem) {
+    column-count: 2;
+  }
+
+  @media (width >= 90rem) {
+    column-count: 3;
+    column-gap: 2.5rem;
+  }
+
+  & > * {
+    break-inside: avoid;
+    margin-bottom: 2rem;
+  }
+
+  @media (width >= 90rem) {
+    & > * {
+      margin-bottom: 2.5rem;
+    }
+  }
+}
+
+/* Corpo editorial das materias (HTML vindo do editor do painel). */
+.prose-editorial {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--color-ink);
+}
+.prose-editorial > * + * {
+  margin-top: 1.25rem;
+}
+.prose-editorial h2,
+.prose-editorial h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.25;
+  margin-top: 2.5rem;
+}
+.prose-editorial h2 {
+  font-size: 1.75rem;
+}
+.prose-editorial h3 {
+  font-size: 1.375rem;
+}
+.prose-editorial a {
+  color: var(--color-brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose-editorial blockquote {
+  border-left: 3px solid var(--color-accent);
+  padding-left: 1.5rem;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.375rem;
+  line-height: 1.5;
+  color: var(--color-ink);
+}
+.prose-editorial ul,
+.prose-editorial ol {
+  padding-left: 1.5rem;
+}
+.prose-editorial ul {
+  list-style: disc;
+}
+.prose-editorial ol {
+  list-style: decimal;
+}
+.prose-editorial li + li {
+  margin-top: 0.5rem;
+}
+.prose-editorial img {
+  width: 100%;
+  height: auto;
+}
+
+/* ---------------------------------------------------------------
+   Pilha fixa do topo (header + barra de dados).
+   Altura declarada aqui para o heroi da home poder se posicionar
+   exatamente atras dela.
+   --------------------------------------------------------------- */
+:root {
+  --topbar-height: 6.5rem;
+}
+
+/* No desktop a pilha fixa ganha a barra utilitaria (2.25rem) acima do header. */
+@media (width >= 48rem) {
+  :root {
+    --topbar-height: 9.75rem;
+  }
+}
+
+/* Separador em tracos entre secoes — o respiro editorial das referencias, no
+   lugar de uma linha cheia de ponta a ponta. */
+@utility rule-dashes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  & span {
+    display: block;
+    width: 1.5rem;
+    height: 1px;
+    background: var(--color-line);
+  }
+
+  & span:nth-child(2) {
+    width: 2.5rem;
+    background: var(--color-accent);
+  }
+}
+
+.databar-label {
+  color: var(--color-muted);
+}
+
+/* Sobre o heroi da home a barra acompanha o header e fica transparente. */
+[data-topbar="transparent"] .databar {
+  background: transparent;
+  border-color: rgb(255 255 255 / 0.25);
+  color: #fff;
+}
+
+[data-topbar="transparent"] .databar-label {
+  color: rgb(255 255 255 / 0.75);
+}
+
+[data-topbar="transparent"] .databar-divider {
+  background: rgb(255 255 255 / 0.35);
+}
+
+.hero-under-topbar {
+  margin-top: calc(-1 * var(--topbar-height));
+  padding-top: var(--topbar-height);
+}
+
+/* Variante do corpo editorial para fundos escuros (Modo Revista). */
+.prose-editorial.prose-invert {
+  color: rgb(255 255 255 / 0.9);
+}
+
+.prose-editorial.prose-invert h2,
+.prose-editorial.prose-invert h3 {
+  color: #fff;
+}
+
+.prose-editorial.prose-invert blockquote {
+  color: #fff;
+  border-color: var(--color-accent);
+}
+
+.prose-editorial.prose-invert a {
+  color: var(--color-accent);
+}
+
+/* A barra de dados rola lateralmente no celular, mas sem barra de rolagem visivel. */
+.databar-scroller {
+  scrollbar-width: none;
+}
+
+.databar-scroller::-webkit-scrollbar {
+  display: none;
+}
