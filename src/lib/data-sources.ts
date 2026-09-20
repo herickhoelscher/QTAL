@@ -178,21 +178,70 @@ export async function getWeather(): Promise<WeatherData | null> {
 /* Dolar                                                                      */
 /* -------------------------------------------------------------------------- */
 
-/** AwesomeAPI: gratuita e sem chave, revalidada a cada 15 min. */
+/** AwesomeAPI: gratuita, sem chave, e ja devolve a variacao do dia pronta. */
+async function dollarFromAwesomeApi(): Promise<CurrencyData | null> {
+  const res = await fetch("https://economia.awesomeapi.com.br/json/last/USD-BRL", {
+    next: { revalidate: 900 },
+  });
+  if (!res.ok) return null;
+  const json = (await res.json()) as Record<string, { bid: string; pctChange: string }>;
+  const quote = json["USDBRL"];
+  if (!quote) return null;
+  return { code: "USD", value: Number(quote.bid), changePercent: Number(quote.pctChange) };
+}
+
+/**
+ * PTAX do Banco Central — a alternativa institucional citada na secao 9.2 da
+ * especificacao. Tambem e aberta e sem chave, e por ser um orgao publico nao
+ * bloqueia requisicao vinda de datacenter, que foi o que derrubou a AwesomeAPI
+ * em producao.
+ *
+ * A PTAX so publica em dia util: pedimos os ultimos dez dias e ficamos com as
+ * duas ultimas cotacoes, uma para o valor e outra para calcular a variacao.
+ */
+async function dollarFromBancoCentral(): Promise<CurrencyData | null> {
+  const fmt = (date: Date) =>
+    `${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}-${date.getFullYear()}`;
+  const hoje = new Date();
+  const inicio = new Date(hoje.getTime() - 10 * 24 * 60 * 60 * 1000);
+
+  const url =
+    "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/" +
+    "CotacaoDolarPeriodo(dataInicial=@dataInicial,dataFinalCotacao=@dataFinalCotacao)" +
+    `?@dataInicial='${fmt(inicio)}'&@dataFinalCotacao='${fmt(hoje)}'&$top=100&$format=json`;
+
+  const res = await fetch(url, { next: { revalidate: 900 } });
+  if (!res.ok) return null;
+
+  const json = (await res.json()) as { value?: { cotacaoCompra: number }[] };
+  const serie = json.value ?? [];
+  if (!serie.length) return null;
+
+  const atual = serie[serie.length - 1].cotacaoCompra;
+  const anterior = serie.length > 1 ? serie[serie.length - 2].cotacaoCompra : null;
+  if (!atual) return null;
+
+  return {
+    code: "USD",
+    value: atual,
+    changePercent: anterior ? ((atual - anterior) / anterior) * 100 : 0,
+  };
+}
+
+/**
+ * Cotacao do dolar, com duas fontes abertas em sequencia. A primeira e mais
+ * fresca; a segunda garante que a faixa nunca fique com "--" so porque um
+ * provedor recusou a requisicao.
+ */
 export async function getDollar(): Promise<CurrencyData | null> {
   return withFallback<CurrencyData>("usd", async () => {
-    const res = await fetch("https://economia.awesomeapi.com.br/json/last/USD-BRL", {
-      next: { revalidate: 900 },
-    });
-    if (!res.ok) return null;
-    const json = (await res.json()) as Record<string, { bid: string; pctChange: string }>;
-    const quote = json["USDBRL"];
-    if (!quote) return null;
-    return {
-      code: "USD",
-      value: Number(quote.bid),
-      changePercent: Number(quote.pctChange),
-    };
+    try {
+      const awesome = await dollarFromAwesomeApi();
+      if (awesome && Number.isFinite(awesome.value)) return awesome;
+    } catch (error) {
+      console.error("[data-sources] AwesomeAPI indisponivel:", error);
+    }
+    return dollarFromBancoCentral();
   });
 }
 
