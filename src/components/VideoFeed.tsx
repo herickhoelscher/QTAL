@@ -1,5 +1,7 @@
 "use client";
 
+import { SITE_URL } from "@/lib/site-url";
+
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -40,7 +42,7 @@ export function VideoFeed({ videos, startIndex = 0 }: Props) {
   const [muted, setMuted] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const siteUrl = SITE_URL;
 
   // Posiciona no vídeo escolhido sem animar, para a entrada não parecer um salto.
   useEffect(() => {

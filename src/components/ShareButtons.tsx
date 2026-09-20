@@ -1,5 +1,7 @@
 "use client";
 
+import { SITE_URL } from "@/lib/site-url";
+
 import { useState } from "react";
 
 type Props = {
@@ -15,7 +17,7 @@ export function ShareButtons({ title, path, tone = "dark" }: Props) {
   // Endereco absoluto montado a partir da env publica, e nao de window.location:
   // servidor e cliente geram exatamente o mesmo href (sem hydration mismatch) e o
   // link compartilhado e sempre o canonico do site, nunca o de um preview.
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const siteUrl = SITE_URL;
   const url = () => siteUrl + path;
 
   const share = async () => {

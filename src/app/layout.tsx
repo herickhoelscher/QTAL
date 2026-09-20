@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import Script from "next/script";
 import { getSettings } from "@/lib/settings";
+import { SITE_URL } from "@/lib/site-url";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -20,7 +21,7 @@ const inter = Inter({
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings();
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+    metadataBase: new URL(SITE_URL),
     title: {
       default: settings.siteName,
       template: `%s · ${settings.siteName}`,
