@@ -27,14 +27,18 @@ npm run dev
 
 O site sobe em `http://localhost:3000` e o painel em `http://localhost:3000/admin`.
 
-Acessos criados pelo seed:
+O seed cria dois acessos de desenvolvimento:
 
-| E-mail | Senha | Papel |
-| --- | --- | --- |
-| admin@portal.local | portal2026 | Administrador geral |
-| redacao@portal.local | portal2026 | Editor de conteúdo |
+| E-mail | Papel |
+| --- | --- |
+| admin@portal.local | Administrador geral |
+| redacao@portal.local | Editor de conteúdo |
 
-> Troque estas senhas antes de qualquer publicação real, em `/admin/usuarios`.
+A senha dos dois está em `prisma/seed.ts` e vale **apenas para o banco local**.
+
+> Em qualquer ambiente publicado, troque as duas em `/admin/usuarios` logo após
+> o primeiro acesso. Senha de seed em repositório público é senha conhecida:
+> quem lê o código entra no painel.
 
 ## Estrutura
 
