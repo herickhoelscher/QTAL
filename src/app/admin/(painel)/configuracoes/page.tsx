@@ -45,7 +45,7 @@ export default async function AdminSettingsPage() {
           hasDeeplKey: Boolean(settings.deeplApiKey?.trim()),
         }}
       />
-      {settings.deeplApiKey?.trim() ? <TranslateBacklogButton /> : null}
+      <TranslateBacklogButton />
     </>
   );
 }

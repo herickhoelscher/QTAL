@@ -97,19 +97,20 @@ celular, elas ficam dentro do menu.
 
 - **Menus, botões e títulos das seções** já saem traduzidos, sem precisar fazer nada.
 - **Matérias, eventos, imóveis, vídeos, edições e categorias** são traduzidos
-  automaticamente pelo DeepL no momento em que você publica. Ao editar algo já publicado,
-  só o trecho que mudou é traduzido de novo.
+  automaticamente no momento em que você publica — não é preciso fazer nada. Ao editar algo
+  já publicado, só o trecho que mudou é traduzido de novo.
 
-Para ligar a tradução do conteúdo:
+A tradução automática funciona de dois jeitos:
 
-1. Crie uma conta gratuita em **deepl.com/pro-api** (a faixa grátis cobre 500 mil
-   caracteres por mês).
-2. Copie a chave da API e cole em **Configurações → Idiomas → Chave da API do DeepL**.
-3. Salve e clique em **Traduzir acervo** para traduzir o que já estava publicado. Cada clique
-   traduz 20 itens; repita até aparecer que o acervo está completo.
+- **Sem configurar nada**, o site usa um serviço gratuito que dá conta de cerca de 10
+  matérias por dia. A qualidade é boa para leitura, mas às vezes traduz ao pé da letra.
+- **Com a chave do DeepL**, a tradução fica mais natural e a cota sobe para 500 mil caracteres
+  por mês. Crie uma conta gratuita em **deepl.com/pro-api** e cole a chave em
+  **Configurações → Idiomas → Chave da API do DeepL**.
 
-Sem a chave, ou se a cota do mês acabar, o conteúdo aparece em português nas três versões —
-o site nunca sai do ar por causa da tradução.
+Se a cota do dia acabar, o conteúdo novo aparece em português até a próxima tradução. Nesse
+caso, clique em **Traduzir acervo** (em Configurações) no dia seguinte para completar. O site
+nunca sai do ar por causa da tradução.
 
 ## Barra de clima, dólar e CUB
 

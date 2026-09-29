@@ -3,14 +3,26 @@ import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { TARGET_LOCALES } from "@/lib/i18n/locales";
 import { hashText } from "@/lib/i18n/overlay";
-import { deeplTranslator, type Translator } from "@/lib/i18n/translator";
+import {
+  TranslatorQuotaError,
+  deeplTranslator,
+  myMemoryTranslator,
+  type Translator,
+} from "@/lib/i18n/translator";
 
 /**
  * Lado da escrita das traducoes: roda no painel, ao publicar. O lado da
  * leitura (paginas publicas) fica em localize.ts.
  */
 
-export type ContentModel = "article" | "event" | "property" | "video" | "issue" | "category";
+export type ContentModel =
+  | "article"
+  | "event"
+  | "property"
+  | "video"
+  | "issue"
+  | "category"
+  | "settings";
 
 type FieldSpec = { field: string; html: boolean };
 
@@ -22,14 +34,17 @@ export const TRANSLATABLE: Record<ContentModel, FieldSpec[]> = {
     { field: "body", html: true },
     { field: "metaTitle", html: false },
     { field: "metaDescription", html: false },
+    { field: "coverAlt", html: false },
   ],
   event: [
     { field: "title", html: false },
     { field: "description", html: true },
+    { field: "coverAlt", html: false },
   ],
   property: [
     { field: "title", html: false },
     { field: "description", html: true },
+    { field: "coverAlt", html: false },
   ],
   video: [
     { field: "title", html: false },
@@ -40,6 +55,12 @@ export const TRANSLATABLE: Record<ContentModel, FieldSpec[]> = {
     { field: "description", html: false },
   ],
   category: [{ field: "name", html: false }],
+  // Textos digitados em Configuracoes: a frase da faixa do topo e a mensagem
+  // que ja vem escrita no WhatsApp do "Assine".
+  settings: [
+    { field: "siteDescription", html: false },
+    { field: "whatsappMessage", html: false },
+  ],
 };
 
 export function fieldsOf(model: ContentModel): string[] {
@@ -73,14 +94,20 @@ function loadRows(model: ContentModel, select: Record<string, boolean>, ids?: st
       return prisma.issue.findMany({ where: published, select });
     case "category":
       return prisma.category.findMany({ where: byId, select });
+    case "settings":
+      return prisma.apiSettings.findMany({ where: byId, select });
   }
 }
 
-/** Tradutor configurado, ou null quando nao ha chave — o site segue em portugues. */
-async function getTranslator(): Promise<Translator | null> {
+/**
+ * DeepL quando ha chave (melhor qualidade, 500 mil caracteres/mes); sem ela,
+ * o MyMemory, que dispensa cadastro — assim todo conteudo novo sai traduzido
+ * mesmo antes de o cliente criar a conta no DeepL.
+ */
+async function getTranslator(): Promise<Translator> {
   const settings = await getSettings();
   const key = settings.deeplApiKey?.trim() || process.env.DEEPL_API_KEY?.trim();
-  return key ? deeplTranslator(key) : null;
+  return key ? deeplTranslator(key) : myMemoryTranslator(settings.contactEmail);
 }
 
 type Job = { recordId: string; field: string; html: boolean; text: string; hash: string };
@@ -160,7 +187,6 @@ async function runJobs(model: ContentModel, records: SourceRecord[], translator:
 export async function translateRecord(model: ContentModel, id: string): Promise<void> {
   try {
     const translator = await getTranslator();
-    if (!translator) return;
     const records = await loadSources(model, [id]);
     if (records.length) await runJobs(model, records, translator);
   } catch (error) {
@@ -173,7 +199,15 @@ export async function deleteTranslations(model: ContentModel, id: string): Promi
   await prisma.translation.deleteMany({ where: { model, recordId: id } });
 }
 
-const MODELS: ContentModel[] = ["category", "issue", "article", "event", "property", "video"];
+const MODELS: ContentModel[] = [
+  "settings",
+  "category",
+  "issue",
+  "article",
+  "event",
+  "property",
+  "video",
+];
 
 export type BackfillResult =
   | { ok: false; error: string }
@@ -186,7 +220,6 @@ export type BackfillResult =
  */
 export async function translateBacklog(maxRecords = 20): Promise<BackfillResult> {
   const translator = await getTranslator();
-  if (!translator) return { ok: false, error: "Cadastre a chave do DeepL antes de traduzir." };
 
   let translatedFields = 0;
   let budget = maxRecords;
@@ -209,7 +242,9 @@ export async function translateBacklog(maxRecords = 20): Promise<BackfillResult>
     const message = error instanceof Error ? error.message : String(error);
     return {
       ok: false,
-      error: message.includes("456")
+      error: error instanceof TranslatorQuotaError
+        ? "A cota diária da tradução gratuita acabou. O restante será traduzido amanhã — ou cadastre a chave do DeepL, que tem cota bem maior."
+        : message.includes("456")
         ? "A cota mensal do DeepL acabou. O restante será traduzido quando ela renovar."
         : message.includes("403")
           ? "O DeepL recusou a chave. Confira se ela foi copiada inteira."

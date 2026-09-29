@@ -3,6 +3,7 @@ import { PageHeader, Section } from "@/components/ui";
 import { getSettings, whatsappLink } from "@/lib/settings";
 import { getDictionary } from "@/lib/i18n/server";
 import { alternatesFor } from "@/lib/i18n/seo";
+import { localizedSettingsTexts } from "@/lib/i18n/localize";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDictionary();
@@ -15,7 +16,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function SubscribePage() {
   const [settings, { t }] = await Promise.all([getSettings(), getDictionary()]);
-  const link = whatsappLink(settings.whatsappNumber, settings.whatsappMessage);
+  const texts = await localizedSettingsTexts(settings);
+  const link = whatsappLink(settings.whatsappNumber, texts.whatsappMessage);
   const benefits = [
     { title: t.subscribe.benefit1Title, description: t.subscribe.benefit1Text },
     { title: t.subscribe.benefit2Title, description: t.subscribe.benefit2Text },

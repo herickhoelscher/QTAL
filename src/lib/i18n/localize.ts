@@ -4,6 +4,25 @@ import { getLocale } from "@/lib/i18n/server";
 import { fieldsOf, type ContentModel } from "@/lib/i18n/content";
 import { applyTranslations } from "@/lib/i18n/overlay";
 
+/**
+ * Textos digitados em Configuracoes (frase do topo e mensagem do WhatsApp) no
+ * idioma da pagina. Devolve uma copia: o objeto de getSettings e compartilhado
+ * pela requisicao inteira e nao deve ser alterado.
+ */
+export async function localizedSettingsTexts(settings: {
+  id: string;
+  siteDescription: string;
+  whatsappMessage: string;
+}) {
+  const texts = {
+    id: settings.id,
+    siteDescription: settings.siteDescription,
+    whatsappMessage: settings.whatsappMessage,
+  };
+  await localize([{ model: "settings", records: [texts] }]);
+  return texts;
+}
+
 export type LocalizeGroup = {
   model: ContentModel;
   records: ({ id: string } | null | undefined)[];

@@ -266,7 +266,7 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
 
       <FormSection
         title="Idiomas"
-        description="O site tem versões em inglês e espanhol (bandeiras no topo). Menus e botões já saem traduzidos; matérias, eventos, imóveis e vídeos são traduzidos pelo DeepL ao publicar."
+        description="O site tem versões em inglês e espanhol (bandeiras no topo). Menus e botões já saem traduzidos; matérias, eventos, imóveis e vídeos são traduzidos automaticamente no momento em que você publica."
       >
         <Field
           label="Chave da API do DeepL"
@@ -274,7 +274,7 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
           hint={
             settings.hasDeeplKey
               ? "Há uma chave cadastrada. Deixe em branco para mantê-la, ou cole outra para trocar."
-              : "Crie uma conta gratuita em deepl.com/pro-api (500 mil caracteres por mês) e cole aqui a chave. Sem ela, o conteúdo aparece em português nas três versões."
+              : "Opcional. Sem chave, o site já traduz sozinho com um serviço gratuito (cerca de 10 matérias por dia). Para mais volume e melhor qualidade, crie uma conta gratuita em deepl.com/pro-api (500 mil caracteres por mês) e cole a chave aqui."
           }
         >
           <TextInput

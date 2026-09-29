@@ -81,6 +81,38 @@ export function timeAgo(date: Date | string, locale: Locale = DEFAULT_LOCALE): s
   return JUST_NOW[locale];
 }
 
+const PT_MONTHS = [
+  "janeiro",
+  "fevereiro",
+  "março",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
+];
+
+/**
+ * Referencia do CUB ("agosto/2026", digitada no painel ou vinda do
+ * Sinduscon) no idioma do leitor: "August/2026", "agosto/2026". Qualquer
+ * outro formato passa intacto.
+ */
+export function formatMonthReference(reference: string, locale: Locale = DEFAULT_LOCALE): string {
+  const match = reference.trim().match(/^([a-zç]+)\s*\/\s*(\d{4})$/i);
+  if (!match || locale === DEFAULT_LOCALE) return reference;
+  const month = PT_MONTHS.indexOf(match[1].toLowerCase().replace("marco", "março"));
+  if (month < 0) return reference;
+  const name = new Intl.DateTimeFormat(LOCALE_TAG[locale], {
+    month: "long",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(2000, month, 15)));
+  return name + "/" + match[2];
+}
+
 /**
  * Rotulo curto da edicao para o rodape do card: de "Edição 12 — Habitar o
  * clima" sobra "Edição 12", que e o que cabe ao lado do tempo relativo.

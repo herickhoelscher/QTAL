@@ -3,6 +3,7 @@ import { LiveClock } from "@/components/LiveClock";
 import { WeatherIcon } from "@/components/WeatherIcon";
 import { getDictionary } from "@/lib/i18n/server";
 import { LOCALE_TAG, type Locale } from "@/lib/i18n/locales";
+import { formatMonthReference } from "@/lib/format";
 
 const numberFormat = (locale: Locale) =>
   new Intl.NumberFormat(LOCALE_TAG[locale], {
@@ -85,7 +86,9 @@ export async function DataBar() {
                 </span>
               ) : null}
               {cub.reference ? (
-                <span className="databar-label normal-case">{cub.reference}</span>
+                <span className="databar-label normal-case">
+                  {formatMonthReference(cub.reference, locale)}
+                </span>
               ) : null}
               {cub.source === "sinapi" ? (
                 <span className="databar-label normal-case">SINAPI/IBGE</span>

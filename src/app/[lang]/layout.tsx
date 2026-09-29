@@ -6,6 +6,7 @@ import { I18nProvider } from "@/components/I18nProvider";
 import { inter, playfair } from "@/lib/fonts";
 import { LOCALES, LOCALE_TAG, OG_LOCALE, isLocale, toLocale } from "@/lib/i18n/locales";
 import { getSettings } from "@/lib/settings";
+import { localizedSettingsTexts } from "@/lib/i18n/localize";
 import { SITE_URL } from "@/lib/site-url";
 import "../globals.css";
 
@@ -15,13 +16,14 @@ export function generateStaticParams() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const [settings, locale] = await Promise.all([getSettings(), lang()]);
+  const texts = await localizedSettingsTexts(settings);
   return {
     metadataBase: new URL(SITE_URL),
     title: {
       default: settings.siteName,
       template: `%s · ${settings.siteName}`,
     },
-    description: settings.siteDescription,
+    description: texts.siteDescription,
     openGraph: {
       type: "website",
       locale: OG_LOCALE[toLocale(locale)],

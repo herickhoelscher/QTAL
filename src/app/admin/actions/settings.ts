@@ -77,6 +77,10 @@ export async function saveSettings(
     update: data,
   });
 
+  // A frase da faixa do topo tambem aparece em ingles e espanhol.
+  const { translateRecord } = await import("@/lib/i18n/content");
+  await translateRecord("settings", "singleton");
+
   revalidatePath("/[lang]", "layout");
   revalidatePath("/admin/configuracoes");
   return { success: "Configurações salvas." };

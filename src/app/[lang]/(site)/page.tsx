@@ -10,7 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { getSettings, whatsappLink } from "@/lib/settings";
 import { editionLabel, excerpt, formatDateLong } from "@/lib/format";
 import { getDictionary } from "@/lib/i18n/server";
-import { localize } from "@/lib/i18n/localize";
+import { localize, localizedSettingsTexts } from "@/lib/i18n/localize";
 import { alternatesFor } from "@/lib/i18n/seo";
 import { fmt } from "@/lib/i18n/locales";
 import type { Metadata } from "next";
@@ -83,6 +83,8 @@ export default async function HomePage() {
     { model: "video", records: videos },
     { model: "property", records: properties },
   ]);
+
+  const settingsTexts = await localizedSettingsTexts(settings);
 
   const heroSource = featured.length ? featured : articles.slice(0, 3);
   const slides: HeroSlide[] = heroSource.map((article) => ({
@@ -294,7 +296,7 @@ export default async function HomePage() {
         </Section>
       </div>
 
-      <SubscribeBlock href={whatsappLink(settings.whatsappNumber, settings.whatsappMessage)} />
+      <SubscribeBlock href={whatsappLink(settings.whatsappNumber, settingsTexts.whatsappMessage)} />
 
       {events[0] ? (
         <p className="sr-only">
