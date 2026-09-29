@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
+import { useI18n } from "@/components/I18nProvider";
 
 export type TabItem = {
   id: string;
@@ -20,7 +21,7 @@ export function CategoryTabs({
   categories,
   items,
   extra,
-  emptyLabel = "Ainda não há matérias nesta editoria.",
+  emptyLabel,
 }: {
   categories: { slug: string; name: string }[];
   items: TabItem[];
@@ -28,6 +29,7 @@ export function CategoryTabs({
   extra?: ReactNode;
   emptyLabel?: string;
 }) {
+  const { t, href } = useI18n();
   const router = useRouter();
   const params = useSearchParams();
   const active = params.get("categoria") ?? "";
@@ -39,7 +41,7 @@ export function CategoryTabs({
     if (slug) next.set("categoria", slug);
     else next.delete("categoria");
     const query = next.toString();
-    router.replace(query ? "/materias?" + query : "/materias", { scroll: false });
+    router.replace(href(query ? "/materias?" + query : "/materias"), { scroll: false });
   }
 
   const tab = (slug: string, name: string) => {
@@ -65,9 +67,9 @@ export function CategoryTabs({
 
   return (
     <>
-      <nav aria-label="Editorias" className="mb-10 border-b border-line">
+      <nav aria-label={t.articles.categoriesLabel} className="mb-10 border-b border-line">
         <ul className="flex flex-wrap items-center gap-x-6 gap-y-3 pb-1">
-          {tab("", "Todas")}
+          {tab("", t.articles.all)}
           {categories.map((category) => tab(category.slug, category.name))}
         </ul>
       </nav>
@@ -81,7 +83,7 @@ export function CategoryTabs({
         </div>
       ) : (
         <div className="rounded-lg border border-dashed border-line px-6 py-16 text-center text-muted">
-          {emptyLabel}
+          {emptyLabel ?? t.articles.emptyCategory}
         </div>
       )}
     </>

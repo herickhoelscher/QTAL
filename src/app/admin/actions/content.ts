@@ -9,6 +9,7 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import { slugify, uniqueSlug } from "@/lib/slug";
 import { parseVideoUrl } from "@/lib/video";
 import type { ActionState } from "@/app/admin/actions/auth";
+import { deleteTranslations, translateRecord } from "@/lib/i18n/content";
 
 type GalleryInput = {
   url: string;
@@ -49,6 +50,14 @@ function parseGallery(formData: FormData, key: string): GalleryInput[] {
   } catch {
     return [];
   }
+}
+
+/**
+ * Renova o cache das paginas publicas nos tres idiomas. Elas vivem sob
+ * app/[lang], entao um caminho solto ("/materias") nao alcancaria /en e /es.
+ */
+function revalidateSite() {
+  revalidatePath("/[lang]", "layout");
 }
 
 function categoryIds(formData: FormData): string[] {
@@ -127,17 +136,18 @@ export async function saveArticle(
     });
   }
 
-  revalidatePath("/materias");
-  revalidatePath("/materias/" + article.slug);
-  revalidatePath("/");
+  if (article.status === "PUBLISHED") await translateRecord("article", article.id);
+  revalidateSite();
   redirect("/admin/materias?salvo=1");
 }
 
 export async function deleteArticle(formData: FormData) {
   await requireSession();
-  await prisma.article.delete({ where: { id: String(formData.get("id")) } });
+  const id = String(formData.get("id"));
+  await prisma.article.delete({ where: { id } });
+  await deleteTranslations("article", id);
   revalidatePath("/admin/materias");
-  revalidatePath("/materias");
+  revalidateSite();
 }
 
 // ------------------------------------------------------------------ Eventos
@@ -195,17 +205,18 @@ export async function saveEvent(_state: ActionState, formData: FormData): Promis
     });
   }
 
-  revalidatePath("/eventos");
-  revalidatePath("/eventos/" + event.slug);
-  revalidatePath("/");
+  if (event.status === "PUBLISHED") await translateRecord("event", event.id);
+  revalidateSite();
   redirect("/admin/eventos?salvo=1");
 }
 
 export async function deleteEvent(formData: FormData) {
   await requireSession();
-  await prisma.event.delete({ where: { id: String(formData.get("id")) } });
+  const id = String(formData.get("id"));
+  await prisma.event.delete({ where: { id } });
+  await deleteTranslations("event", id);
   revalidatePath("/admin/eventos");
-  revalidatePath("/eventos");
+  revalidateSite();
 }
 
 // ------------------------------------------------------------------ Imóveis
@@ -273,17 +284,18 @@ export async function saveProperty(
     });
   }
 
-  revalidatePath("/imoveis");
-  revalidatePath("/imoveis/" + property.slug);
-  revalidatePath("/");
+  if (property.status === "PUBLISHED") await translateRecord("property", property.id);
+  revalidateSite();
   redirect("/admin/imoveis?salvo=1");
 }
 
 export async function deleteProperty(formData: FormData) {
   await requireSession();
-  await prisma.property.delete({ where: { id: String(formData.get("id")) } });
+  const id = String(formData.get("id"));
+  await prisma.property.delete({ where: { id } });
+  await deleteTranslations("property", id);
   revalidatePath("/admin/imoveis");
-  revalidatePath("/imoveis");
+  revalidateSite();
 }
 
 // ------------------------------------------------------------------- Vídeos
@@ -356,20 +368,19 @@ export async function saveVideo(_state: ActionState, formData: FormData): Promis
         },
       });
 
-  revalidatePath("/videos");
-  revalidatePath("/videos/" + video.slug);
-  revalidatePath("/materias", "layout");
-  revalidatePath("/imoveis", "layout");
-  revalidatePath("/eventos", "layout");
-  revalidatePath("/");
+  if (video.status === "PUBLISHED") await translateRecord("video", video.id);
+  // O video aparece tambem em materias, eventos e imoveis: renova o site todo.
+  revalidateSite();
   redirect("/admin/videos?salvo=1");
 }
 
 export async function deleteVideo(formData: FormData) {
   await requireSession();
-  await prisma.video.delete({ where: { id: String(formData.get("id")) } });
+  const id = String(formData.get("id"));
+  await prisma.video.delete({ where: { id } });
+  await deleteTranslations("video", id);
   revalidatePath("/admin/videos");
-  revalidatePath("/videos");
+  revalidateSite();
 }
 
 // ------------------------------------------------ Edições (Modo Revista)
@@ -413,15 +424,18 @@ export async function saveIssue(_state: ActionState, formData: FormData): Promis
     });
   }
 
-  revalidatePath("/modo-revista/" + issue.slug);
-  revalidatePath("/");
+  if (issue.status === "PUBLISHED") await translateRecord("issue", issue.id);
+  revalidateSite();
   redirect("/admin/edicoes?salvo=1");
 }
 
 export async function deleteIssue(formData: FormData) {
   await requireSession();
-  await prisma.issue.delete({ where: { id: String(formData.get("id")) } });
+  const id = String(formData.get("id"));
+  await prisma.issue.delete({ where: { id } });
+  await deleteTranslations("issue", id);
   revalidatePath("/admin/edicoes");
+  revalidateSite();
 }
 
 // --------------------------------------------------------------- Categorias
@@ -440,13 +454,18 @@ export async function saveCategory(
   const existing = await prisma.category.findFirst({ where: { slug, type } });
   if (existing) return { error: "Já existe uma categoria com esse nome nesse módulo." };
 
-  await prisma.category.create({ data: { name, slug, type } });
+  const category = await prisma.category.create({ data: { name, slug, type } });
+  await translateRecord("category", category.id);
   revalidatePath("/admin/categorias");
+  revalidateSite();
   return { success: "Categoria criada." };
 }
 
 export async function deleteCategory(formData: FormData) {
   await requireSession();
-  await prisma.category.delete({ where: { id: String(formData.get("id")) } });
+  const id = String(formData.get("id"));
+  await prisma.category.delete({ where: { id } });
+  await deleteTranslations("category", id);
   revalidatePath("/admin/categorias");
+  revalidateSite();
 }

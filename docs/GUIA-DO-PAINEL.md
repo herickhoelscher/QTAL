@@ -90,6 +90,27 @@ setas ↑ e ↓ para reorganizar.
 
 Publicando a edição, a chamada aparece na página inicial.
 
+## Idiomas (português, inglês e espanhol)
+
+As três bandeiras no topo do site trocam o idioma da página que a pessoa está lendo. No
+celular, elas ficam dentro do menu.
+
+- **Menus, botões e títulos das seções** já saem traduzidos, sem precisar fazer nada.
+- **Matérias, eventos, imóveis, vídeos, edições e categorias** são traduzidos
+  automaticamente pelo DeepL no momento em que você publica. Ao editar algo já publicado,
+  só o trecho que mudou é traduzido de novo.
+
+Para ligar a tradução do conteúdo:
+
+1. Crie uma conta gratuita em **deepl.com/pro-api** (a faixa grátis cobre 500 mil
+   caracteres por mês).
+2. Copie a chave da API e cole em **Configurações → Idiomas → Chave da API do DeepL**.
+3. Salve e clique em **Traduzir acervo** para traduzir o que já estava publicado. Cada clique
+   traduz 20 itens; repita até aparecer que o acervo está completo.
+
+Sem a chave, ou se a cota do mês acabar, o conteúdo aparece em português nas três versões —
+o site nunca sai do ar por causa da tradução.
+
 ## Barra de clima, dólar e CUB
 
 A faixa no topo do site é automática:

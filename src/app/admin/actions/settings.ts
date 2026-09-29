@@ -62,6 +62,13 @@ export async function saveSettings(
     contactPhone: optional(formData, "contactPhone"),
     contactEmail: optional(formData, "contactEmail"),
     contactAddress: optional(formData, "contactAddress"),
+    // A chave nao volta para a tela: campo em branco mantem a atual, e a caixa
+    // "remover" apaga. Assim salvar outras configuracoes nao a perde.
+    ...(formData.get("deeplApiKeyRemove") === "on"
+      ? { deeplApiKey: null }
+      : optional(formData, "deeplApiKey")
+        ? { deeplApiKey: optional(formData, "deeplApiKey") }
+        : {}),
   };
 
   await prisma.apiSettings.upsert({
@@ -70,7 +77,8 @@ export async function saveSettings(
     update: data,
   });
 
-  revalidatePath("/", "layout");
+  revalidatePath("/[lang]", "layout");
+  revalidatePath("/admin/configuracoes");
   return { success: "Configurações salvas." };
 }
 
@@ -86,5 +94,25 @@ export async function refreshCubNow(): Promise<void> {
   const { refreshCub } = await import("@/lib/cub-source");
   await refreshCub({ force: true });
   revalidatePath("/admin/configuracoes");
-  revalidatePath("/", "layout");
+  revalidatePath("/[lang]", "layout");
+}
+
+/**
+ * Botao "Traduzir acervo": traduz em lotes o conteudo publicado antes de a
+ * chave existir (ou que ficou sem traducao por falha do DeepL).
+ */
+export async function translateBacklogNow(): Promise<ActionState> {
+  await requireAdmin();
+  const { translateBacklog } = await import("@/lib/i18n/content");
+  const result = await translateBacklog();
+  revalidatePath("/[lang]", "layout");
+  if (!result.ok) return { error: result.error };
+  if (!result.translatedFields && !result.remainingRecords) {
+    return { success: "Todo o conteúdo publicado já está em inglês e espanhol." };
+  }
+  return {
+    success: result.remainingRecords
+      ? `${result.translatedFields} campos traduzidos. Ainda faltam ${result.remainingRecords} itens — clique de novo para continuar.`
+      : `${result.translatedFields} campos traduzidos. O acervo está completo em inglês e espanhol.`,
+  };
 }

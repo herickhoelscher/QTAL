@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useI18n } from "@/components/I18nProvider";
+import { fmt } from "@/lib/i18n/locales";
 
 export type HeroSlide = {
   title: string;
@@ -15,6 +17,7 @@ export type HeroSlide = {
 
 /** Heroi full-bleed da home: imagem grande, overlay escuro e titulo editorial. */
 export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
+  const { t } = useI18n();
   const [index, setIndex] = useState(0);
   const total = slides.length;
 
@@ -91,7 +94,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
               href={slide.href}
               className="eyebrow mt-8 inline-flex items-center gap-2 border-b border-white pb-1 transition-colors hover:border-accent hover:text-accent"
             >
-              Ler mais &rarr;
+              {t.common.readMore} &rarr;
             </Link>
           </motion.div>
 
@@ -107,7 +110,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
               key={item.href}
               type="button"
               onClick={() => go(i)}
-              aria-label={"Ir para o destaque " + (i + 1)}
+              aria-label={fmt(t.hero.goTo, { n: i + 1 })}
               aria-current={i === index}
               className="group px-1 py-3"
             >

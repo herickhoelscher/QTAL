@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useI18n } from "@/components/I18nProvider";
+import { fmt } from "@/lib/i18n/locales";
 
 export type MagazinePage = {
   slug: string;
@@ -29,6 +31,7 @@ const NAV_COOLDOWN = 650;
  * para nao sequestrar a leitura de materias longas.
  */
 export function MagazineReader({ issueTitle, pages }: Props) {
+  const { t, href } = useI18n();
   const router = useRouter();
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(1);
@@ -58,11 +61,11 @@ export function MagazineReader({ issueTitle, pages }: Props) {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "ArrowRight" || event.key === "PageDown") next();
       if (event.key === "ArrowLeft" || event.key === "PageUp") previous();
-      if (event.key === "Escape") router.push("/");
+      if (event.key === "Escape") router.push(href("/"));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [next, previous, router]);
+  }, [next, previous, router, href]);
 
   const onWheel = (event: React.WheelEvent) => {
     const pane = contentRef.current;
@@ -95,15 +98,15 @@ export function MagazineReader({ issueTitle, pages }: Props) {
     >
       <header className="flex shrink-0 items-center justify-between gap-4 px-5 py-4 md:px-8">
         <p className="eyebrow text-white/60">
-          Modo Revista &middot; {issueTitle}
+          {t.magazine.label} &middot; {issueTitle}
         </p>
         <button
           type="button"
-          onClick={() => router.push("/")}
+          onClick={() => router.push(href("/"))}
           className="eyebrow text-white/80 transition-colors hover:text-white"
-          aria-label="Sair do Modo Revista"
+          aria-label={t.magazine.exitLabel}
         >
-          Sair &#10005;
+          {t.magazine.exit} &#10005;
         </button>
       </header>
 
@@ -162,10 +165,10 @@ export function MagazineReader({ issueTitle, pages }: Props) {
                 />
 
                 <a
-                  href={"/materias/" + page.slug}
+                  href={href("/materias/" + page.slug)}
                   className="eyebrow mt-10 inline-block border-b border-accent pb-1 text-accent"
                 >
-                  Abrir matéria completa &rarr;
+                  {t.magazine.openFull} &rarr;
                 </a>
               </div>
             </div>
@@ -176,7 +179,7 @@ export function MagazineReader({ issueTitle, pages }: Props) {
           type="button"
           onClick={previous}
           disabled={index === 0}
-          aria-label="Página anterior"
+          aria-label={t.magazine.previous}
           className="absolute top-1/2 left-2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/25 disabled:opacity-20 md:flex"
         >
           &#8592;
@@ -185,7 +188,7 @@ export function MagazineReader({ issueTitle, pages }: Props) {
           type="button"
           onClick={next}
           disabled={index === total - 1}
-          aria-label="Próxima página"
+          aria-label={t.magazine.next}
           className="absolute top-1/2 right-2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/25 disabled:opacity-20 md:flex"
         >
           &#8594;
@@ -202,7 +205,7 @@ export function MagazineReader({ issueTitle, pages }: Props) {
               key={item.slug}
               type="button"
               onClick={() => goTo(i, i > index ? 1 : -1)}
-              aria-label={"Ir para a página " + (i + 1)}
+              aria-label={fmt(t.magazine.goTo, { n: i + 1 })}
               aria-current={i === index}
               className={
                 "h-2 rounded-full transition-all " +

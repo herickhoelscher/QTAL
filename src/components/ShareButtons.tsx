@@ -3,6 +3,8 @@
 import { SITE_URL } from "@/lib/site-url";
 
 import { useState } from "react";
+import { useI18n } from "@/components/I18nProvider";
+import { fmt } from "@/lib/i18n/locales";
 
 type Props = {
   title: string;
@@ -36,13 +38,15 @@ function Icon({ name }: { name: keyof typeof ICONS }) {
  * Fileira de quadrados vazados, no padrao da referencia: compartilhamento
  * nativo quando o navegador oferece, as quatro redes e copiar link.
  */
-export function ShareButtons({ title, path, tone = "dark", label = "Compartilhe em" }: Props) {
+export function ShareButtons({ title, path, tone = "dark", label }: Props) {
+  const { t, href } = useI18n();
   const [copied, setCopied] = useState(false);
 
   // Endereco absoluto montado a partir da env publica, e nao de window.location:
   // servidor e cliente geram exatamente o mesmo href (sem hydration mismatch) e o
   // link compartilhado e sempre o canonico do site, nunca o de um preview.
-  const url = SITE_URL + path;
+  // O link compartilhado leva ao mesmo idioma em que o leitor esta.
+  const url = SITE_URL + href(path);
 
   const copy = async () => {
     await navigator.clipboard.writeText(url);
@@ -71,17 +75,17 @@ export function ShareButtons({ title, path, tone = "dark", label = "Compartilhe 
   const networks = [
     {
       key: "whatsapp" as const,
-      label: "Compartilhar no WhatsApp",
+      label: fmt(t.common.shareOn, { network: "WhatsApp" }),
       href: "https://api.whatsapp.com/send?text=" + encodeURIComponent(title + " " + url),
     },
     {
       key: "facebook" as const,
-      label: "Compartilhar no Facebook",
+      label: fmt(t.common.shareOn, { network: "Facebook" }),
       href: "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(url),
     },
     {
       key: "x" as const,
-      label: "Compartilhar no X",
+      label: fmt(t.common.shareOn, { network: "X" }),
       href:
         "https://twitter.com/intent/tweet?url=" +
         encodeURIComponent(url) +
@@ -90,17 +94,17 @@ export function ShareButtons({ title, path, tone = "dark", label = "Compartilhe 
     },
     {
       key: "linkedin" as const,
-      label: "Compartilhar no LinkedIn",
+      label: fmt(t.common.shareOn, { network: "LinkedIn" }),
       href: "https://www.linkedin.com/sharing/share-offsite/?url=" + encodeURIComponent(url),
     },
   ];
 
   return (
     <div>
-      <p className={"eyebrow mb-3 " + (tone === "light" ? "text-white/80" : "text-ink")}>{label}</p>
+      <p className={"eyebrow mb-3 " + (tone === "light" ? "text-white/80" : "text-ink")}>{label ?? t.common.shareIn}</p>
 
       <div className="flex flex-wrap items-center gap-2">
-        <button type="button" onClick={share} aria-label="Compartilhar" className={box}>
+        <button type="button" onClick={share} aria-label={t.common.share} className={box}>
           <Icon name="share" />
         </button>
 
@@ -117,7 +121,7 @@ export function ShareButtons({ title, path, tone = "dark", label = "Compartilhe 
           </a>
         ))}
 
-        <button type="button" onClick={copy} aria-label="Copiar link" className={box}>
+        <button type="button" onClick={copy} aria-label={t.common.copyLink} className={box}>
           <Icon name="link" />
         </button>
 
@@ -126,7 +130,7 @@ export function ShareButtons({ title, path, tone = "dark", label = "Compartilhe 
             role="status"
             className={"text-xs " + (tone === "light" ? "text-white/80" : "text-muted")}
           >
-            Link copiado
+            {t.common.linkCopied}
           </span>
         ) : null}
       </div>

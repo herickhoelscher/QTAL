@@ -1,4 +1,5 @@
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
+import { getDictionary } from "@/lib/i18n/server";
 
 /**
  * Chamada do feed vertical de videos.
@@ -8,7 +9,8 @@ import Link from "next/link";
  * gesto explicado em uma linha, porque e a experiencia que as pessoas ja
  * conhecem de Reels e TikTok e a que mais prende quem chega.
  */
-export function VideoFeedCallout({ className = "" }: { className?: string }) {
+export async function VideoFeedCallout({ className = "" }: { className?: string }) {
+  const { t } = await getDictionary();
   return (
     <Link
       href="/videos/feed"
@@ -25,13 +27,12 @@ export function VideoFeedCallout({ className = "" }: { className?: string }) {
       />
 
       <span className="relative">
-        <span className="eyebrow text-white/60">Feed de vídeos</span>
+        <span className="eyebrow text-white/60">{t.feedCallout.eyebrow}</span>
         <span className="mt-2 block font-display text-2xl leading-tight italic md:text-3xl">
-          Role para cima e vá de um vídeo ao outro
+          {t.feedCallout.title}
         </span>
         <span className="mt-2 block max-w-md text-sm text-white/70">
-          Tela cheia, som no toque e todos os vídeos do portal em sequência — igual ao
-          que você já faz no celular.
+          {t.feedCallout.description}
         </span>
       </span>
 

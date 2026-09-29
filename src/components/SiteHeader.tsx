@@ -1,10 +1,13 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { SocialLinks, type SocialUrls } from "@/components/social-icons";
+import { LocaleSwitcher } from "@/components/LocaleSwitcher";
+import { useI18n } from "@/components/I18nProvider";
+import { stripLocale } from "@/lib/i18n/locales";
 
 export type NavItem = { label: string; href: string; children?: NavItem[] };
 
@@ -36,8 +39,10 @@ export function SiteHeader({
   dataBar,
   utilityBar,
 }: Props) {
+  const { t } = useI18n();
   const pathname = usePathname();
-  const isHome = pathname === "/";
+  // Sem o prefixo: no servidor o portugues chega como /pt, no navegador como /.
+  const isHome = stripLocale(pathname ?? "/") === "/";
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -77,7 +82,7 @@ export function SiteHeader({
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
-            aria-label="Abrir menu"
+            aria-label={t.header.openMenu}
             aria-expanded={menuOpen}
             aria-controls="menu-principal"
             className={
@@ -90,7 +95,7 @@ export function SiteHeader({
               <span className="block h-px w-5 bg-current" />
               <span className="block h-px w-5 bg-current" />
             </span>
-            <span className="hidden sm:inline">Menu</span>
+            <span className="hidden sm:inline">{t.header.menu}</span>
           </button>
 
           <Link
@@ -117,7 +122,7 @@ export function SiteHeader({
                 : "border-white/70 text-white hover:bg-white hover:text-ink")
             }
           >
-            Assine
+            {t.nav.subscribe}
           </Link>
         </header>
 
@@ -141,7 +146,7 @@ export function SiteHeader({
                 className="eyebrow text-muted hover:text-ink"
                 autoFocus
               >
-                Fechar &#10005;
+                {t.header.close} &#10005;
               </button>
             </div>
 
@@ -180,9 +185,15 @@ export function SiteHeader({
                 ))}
               </ul>
 
+              {/* No celular a barra do topo fica escondida: idioma e redes vivem aqui. */}
+              <div className="mt-10 border-t border-line pt-6 md:hidden">
+                <p className="eyebrow mb-3 text-muted">{t.header.language}</p>
+                <LocaleSwitcher variant="labeled" className="flex-wrap gap-x-5 gap-y-3" />
+              </div>
+
               {social ? (
-                <div className="mt-10 border-t border-line pt-6 md:hidden">
-                  <p className="eyebrow mb-3 text-muted">M&iacute;dias sociais</p>
+                <div className="mt-8 md:hidden">
+                  <p className="eyebrow mb-3 text-muted">{t.header.socialMedia}</p>
                   <SocialLinks
                     social={social}
                     variant="outline"

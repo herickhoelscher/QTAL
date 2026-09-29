@@ -1,8 +1,10 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { VideoThumb } from "@/components/VideoThumb";
 import { CategoryBadge } from "@/components/ui";
 import { formatCurrency, formatDateShort, timeAgo } from "@/lib/format";
+import { getDictionary } from "@/lib/i18n/server";
+import { fmt } from "@/lib/i18n/locales";
 
 type CardCategory = { name: string; slug: string };
 
@@ -13,7 +15,7 @@ type CardCategory = { name: string; slug: string };
  * mais". As imagens mantem proporcoes diferentes de proposito — e o que da ao
  * grid masonry o ritmo de alturas variaveis.
  */
-export function ContentCard({
+export async function ContentCard({
   href,
   title,
   excerpt,
@@ -48,6 +50,7 @@ export function ContentCard({
       titulo de secao — mantem a hierarquia de headings sem saltos. */
   headingLevel?: 2 | 3;
 }) {
+  const { locale, t } = await getDictionary();
   const Heading = ("h" + headingLevel) as "h2" | "h3";
   const [primary, ...secondary] = categories;
 
@@ -99,13 +102,13 @@ export function ContentCard({
 
         <div className="mt-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-line pt-3">
           <span className="eyebrow text-muted">
-            {date ? (relative ? timeAgo(date) : formatDateShort(date)) : null}
+            {date ? (relative ? timeAgo(date, locale) : formatDateShort(date, locale)) : null}
             {date && meta ? " · " : null}
             {meta}
           </span>
           {edition ? <span className="eyebrow text-accent-text">{edition}</span> : null}
           <Link href={href} className="eyebrow group/link text-brand hover:underline">
-            Ler mais{" "}
+            {t.common.readMore}{" "}
             <span className="inline-block transition-transform duration-300 group-hover/link:translate-x-0.5">
               &rsaquo;
             </span>
@@ -122,10 +125,10 @@ export function ContentCard({
  * editorial aos olhos do leitor. Sem campanha cadastrada, o card mostra as
  * dimensoes do inventario, servindo de placeholder na apresentacao.
  */
-export function AdCard({
+export async function AdCard({
   image,
   href,
-  label = "Informe publicitário",
+  label,
   advertiser,
 }: {
   image?: string | null;
@@ -133,19 +136,20 @@ export function AdCard({
   label?: string;
   advertiser?: string;
 }) {
+  const { t } = await getDictionary();
   const body = (
     <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-alt">
       {image ? (
         <Image
           src={image}
-          alt={advertiser ? "Anúncio de " + advertiser : "Espaço publicitário"}
+          alt={advertiser ? fmt(t.cards.adOf, { name: advertiser }) : t.cards.adSpace}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1440px) 48vw, 520px"
           className="object-cover transition-transform duration-700 hover:scale-[1.03]"
         />
       ) : (
         <div className="flex h-full flex-col items-center justify-center gap-2 border border-dashed border-line text-muted">
-          <span className="eyebrow">Espaço publicitário</span>
+          <span className="eyebrow">{t.cards.adSpace}</span>
           <span className="text-xs">970×250 · 300×600 · 728×90</span>
         </div>
       )}
@@ -154,7 +158,7 @@ export function AdCard({
 
   return (
     <aside className="bg-surface p-3 shadow-[0_1px_3px_rgba(26,26,26,0.07),0_8px_24px_-18px_rgba(26,26,26,0.35)]">
-      <p className="eyebrow mb-3 text-center text-muted">{label}</p>
+      <p className="eyebrow mb-3 text-center text-muted">{label ?? t.cards.adLabel}</p>
       {href ? (
         <Link href={href} className="block">
           {body}
@@ -169,7 +173,7 @@ export function AdCard({
   );
 }
 
-export function VideoCard({
+export async function VideoCard({
   href,
   title,
   embedId,
@@ -194,6 +198,7 @@ export function VideoCard({
   headingLevel?: 2 | 3;
   priority?: boolean;
 }) {
+  const { t } = await getDictionary();
   const Heading = ("h" + headingLevel) as "h2" | "h3";
   // Clicar na capa abre o feed vertical (a experiencia de rolar de um video
   // para o outro); o titulo continua levando a pagina do video.
@@ -201,7 +206,7 @@ export function VideoCard({
 
   return (
     <article className="group">
-      <Link href={playHref} className="block" aria-label={"Assistir: " + title}>
+      <Link href={playHref} className="block" aria-label={fmt(t.cards.watch, { title })}>
         {/* 3/4 e nao 9:16: em tres colunas de 500px, um card 9:16 passaria de
             880px de altura e engoliria a grade inteira. */}
         <div
@@ -226,7 +231,7 @@ export function VideoCard({
           </span>
           {feedHref ? (
             <span className="eyebrow absolute right-3 bottom-3 bg-black/55 px-2.5 py-1 text-white backdrop-blur-sm">
-              Feed
+              {t.cards.feed}
             </span>
           ) : null}
         </div>
@@ -235,7 +240,7 @@ export function VideoCard({
         <div className="flex items-center justify-between gap-3">
           <p className="eyebrow text-muted">{provider}</p>
           <Link href={href} className="eyebrow text-brand hover:underline">
-            Ver página
+            {t.cards.seePage}
           </Link>
         </div>
         <Heading className="mt-1 font-display text-xl leading-[1.25] font-bold italic">
@@ -244,14 +249,14 @@ export function VideoCard({
           </Link>
         </Heading>
         {eventTitle ? (
-          <p className="mt-1 text-xs text-muted">Do evento: {eventTitle}</p>
+          <p className="mt-1 text-xs text-muted">{fmt(t.cards.fromEvent, { title: eventTitle })}</p>
         ) : null}
       </div>
     </article>
   );
 }
 
-export function PropertyCard({
+export async function PropertyCard({
   href,
   title,
   image,
@@ -282,13 +287,16 @@ export function PropertyCard({
   headingLevel?: 2 | 3;
   priority?: boolean;
 }) {
+  const { locale, t } = await getDictionary();
   const Heading = ("h" + headingLevel) as "h2" | "h3";
   const specs = [
     area ? area + " m²" : null,
-    bedrooms ? bedrooms + (bedrooms > 1 ? " quartos" : " quarto") : null,
-    bathrooms ? bathrooms + (bathrooms > 1 ? " banheiros" : " banheiro") : null,
-    garageSpots ? garageSpots + (garageSpots > 1 ? " vagas" : " vaga") : null,
+    bedrooms ? fmt(bedrooms > 1 ? t.cards.bedrooms : t.cards.bedroom, { n: bedrooms }) : null,
+    bathrooms ? fmt(bathrooms > 1 ? t.cards.bathrooms : t.cards.bathroom, { n: bathrooms }) : null,
+    garageSpots ? fmt(garageSpots > 1 ? t.cards.spots : t.cards.spot, { n: garageSpots }) : null,
   ].filter(Boolean);
+  // Aceita o codigo do banco (CASA) ou um rotulo pronto.
+  const typeLabel = t.propertyTypes[type as keyof typeof t.propertyTypes] ?? type;
 
   return (
     <article className="group bg-surface shadow-[0_1px_3px_rgba(26,26,26,0.07),0_8px_24px_-18px_rgba(26,26,26,0.35)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_2px_6px_rgba(26,26,26,0.08),0_22px_48px_-24px_rgba(26,26,26,0.45)]">
@@ -306,7 +314,7 @@ export function PropertyCard({
             />
           ) : null}
           <span className="eyebrow absolute top-3 left-3 bg-surface/95 px-3 py-1 text-ink">
-            {type}
+            {typeLabel}
           </span>
         </div>
       </Link>
@@ -322,7 +330,7 @@ export function PropertyCard({
           <p className="mt-3 text-sm text-muted">{specs.join(" · ")}</p>
         ) : null}
         <p className="mt-4 font-display text-xl text-brand">
-          {priceOnRequest ? "Sob consulta" : formatCurrency(price)}
+          {priceOnRequest ? t.common.priceOnRequest : formatCurrency(price, locale)}
         </p>
       </div>
     </article>

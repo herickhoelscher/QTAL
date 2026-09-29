@@ -1,11 +1,14 @@
 import { getCub, getDollar, getWeather } from "@/lib/data-sources";
 import { LiveClock } from "@/components/LiveClock";
 import { WeatherIcon } from "@/components/WeatherIcon";
+import { getDictionary } from "@/lib/i18n/server";
+import { LOCALE_TAG, type Locale } from "@/lib/i18n/locales";
 
-const NUMBER = new Intl.NumberFormat("pt-BR", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
+const numberFormat = (locale: Locale) =>
+  new Intl.NumberFormat(LOCALE_TAG[locale], {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
 /**
  * Barra de dados automaticos (secao 6.7): data/hora, clima, dolar e CUB.
@@ -13,7 +16,13 @@ const NUMBER = new Intl.NumberFormat("pt-BR", {
  * nenhum erro tecnico chega ao usuario final.
  */
 export async function DataBar() {
-  const [weather, dollar, cub] = await Promise.all([getWeather(), getDollar(), getCub()]);
+  const [weather, dollar, cub, { locale, t }] = await Promise.all([
+    getWeather(),
+    getDollar(),
+    getCub(),
+    getDictionary(),
+  ]);
+  const NUMBER = numberFormat(locale);
   const up = dollar ? dollar.changePercent >= 0 : true;
 
   return (
@@ -24,7 +33,7 @@ export async function DataBar() {
         <span className="databar-divider h-3 w-px shrink-0 bg-line" aria-hidden />
 
         <span className="flex shrink-0 items-center gap-2">
-          <span className="eyebrow databar-label">Clima</span>
+          <span className="eyebrow databar-label">{t.dataBar.weather}</span>
           {weather ? (
             <>
               <WeatherIcon code={weather.code} className="text-muted" />
@@ -42,7 +51,7 @@ export async function DataBar() {
         <span className="databar-divider h-3 w-px shrink-0 bg-line" aria-hidden />
 
         <span className="flex shrink-0 items-center gap-2">
-          <span className="eyebrow databar-label">D&oacute;lar</span>
+          <span className="eyebrow databar-label">{t.dataBar.dollar}</span>
           {dollar ? (
             <>
               <span className="font-semibold tabular-nums">R$ {NUMBER.format(dollar.value)}</span>
@@ -62,7 +71,7 @@ export async function DataBar() {
               painel; sem ele, entra o custo medio m2 do SINAPI/IBGE, que tem
               outra metodologia e por isso nao pode se chamar CUB. */}
           <span className="eyebrow databar-label">
-            {cub.source === "sinapi" ? "Custo m²" : "CUB"}
+            {cub.source === "sinapi" ? t.dataBar.costPerM2 : t.dataBar.cub}
           </span>
           {cub.value ? (
             <>

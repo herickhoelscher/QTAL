@@ -36,6 +36,7 @@ export type SettingsFormData = {
   contactPhone: string | null;
   contactEmail: string | null;
   contactAddress: string | null;
+  hasDeeplKey: boolean;
 };
 
 export function SettingsForm({ settings }: { settings: SettingsFormData }) {
@@ -261,6 +262,32 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
             defaultValue={settings.contactAddress ?? ""}
           />
         </Field>
+      </FormSection>
+
+      <FormSection
+        title="Idiomas"
+        description="O site tem versões em inglês e espanhol (bandeiras no topo). Menus e botões já saem traduzidos; matérias, eventos, imóveis e vídeos são traduzidos pelo DeepL ao publicar."
+      >
+        <Field
+          label="Chave da API do DeepL"
+          htmlFor="deeplApiKey"
+          hint={
+            settings.hasDeeplKey
+              ? "Há uma chave cadastrada. Deixe em branco para mantê-la, ou cole outra para trocar."
+              : "Crie uma conta gratuita em deepl.com/pro-api (500 mil caracteres por mês) e cole aqui a chave. Sem ela, o conteúdo aparece em português nas três versões."
+          }
+        >
+          <TextInput
+            id="deeplApiKey"
+            name="deeplApiKey"
+            type="password"
+            autoComplete="off"
+            placeholder={settings.hasDeeplKey ? "•••••••• cadastrada" : "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx"}
+          />
+        </Field>
+        {settings.hasDeeplKey ? (
+          <Checkbox name="deeplApiKeyRemove" label="Remover a chave cadastrada" />
+        ) : null}
       </FormSection>
 
       <FormSection

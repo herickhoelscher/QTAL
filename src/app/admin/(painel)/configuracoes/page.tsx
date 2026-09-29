@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { SettingsForm } from "@/components/admin/SettingsForm";
+import { TranslateBacklogButton } from "@/components/admin/TranslateBacklogButton";
 import { AdminHeading } from "@/components/admin/ui";
 import { getSession } from "@/lib/auth";
 import { getSettings } from "@/lib/settings";
@@ -41,8 +42,10 @@ export default async function AdminSettingsPage() {
           contactPhone: settings.contactPhone,
           contactEmail: settings.contactEmail,
           contactAddress: settings.contactAddress,
+          hasDeeplKey: Boolean(settings.deeplApiKey?.trim()),
         }}
       />
+      {settings.deeplApiKey?.trim() ? <TranslateBacklogButton /> : null}
     </>
   );
 }

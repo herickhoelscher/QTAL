@@ -3,8 +3,10 @@
 import { SITE_URL } from "@/lib/site-url";
 
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useI18n } from "@/components/I18nProvider";
+import { fmt } from "@/lib/i18n/locales";
 
 export type FeedVideo = {
   slug: string;
@@ -42,6 +44,7 @@ export function VideoFeed({ videos, startIndex = 0 }: Props) {
   const [muted, setMuted] = useState(true);
   const [copied, setCopied] = useState(false);
 
+  const { t, href } = useI18n();
   const siteUrl = SITE_URL;
 
   // Posiciona no vídeo escolhido sem animar, para a entrada não parecer um salto.
@@ -91,7 +94,7 @@ export function VideoFeed({ videos, startIndex = 0 }: Props) {
   }, [active, goTo, videos.length]);
 
   const share = async (video: FeedVideo) => {
-    const link = siteUrl + "/videos/" + video.slug;
+    const link = siteUrl + href("/videos/" + video.slug);
     if (navigator.share) {
       try {
         await navigator.share({ title: video.title, url: link });
@@ -216,7 +219,7 @@ export function VideoFeed({ videos, startIndex = 0 }: Props) {
                   href={"/videos/" + video.slug}
                   className="eyebrow mt-4 inline-block border-b border-white/60 pb-1 hover:border-accent hover:text-accent"
                 >
-                  Abrir p&aacute;gina do v&iacute;deo
+                  {t.videos.openPage}
                 </Link>
               </div>
             </div>
@@ -226,7 +229,7 @@ export function VideoFeed({ videos, startIndex = 0 }: Props) {
               <button
                 type="button"
                 onClick={() => setMuted((current) => !current)}
-                aria-label={muted ? "Ativar som" : "Desativar som"}
+                aria-label={muted ? t.videos.unmute : t.videos.mute}
                 className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition-colors hover:bg-white/30"
               >
                 {muted ? (
@@ -243,7 +246,7 @@ export function VideoFeed({ videos, startIndex = 0 }: Props) {
               <button
                 type="button"
                 onClick={() => share(video)}
-                aria-label="Compartilhar"
+                aria-label={t.common.share}
                 className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition-colors hover:bg-white/30"
               >
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden>
@@ -255,9 +258,9 @@ export function VideoFeed({ videos, startIndex = 0 }: Props) {
                 href={video.externalUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={
-                  "Assistir no " + (video.provider === "YOUTUBE" ? "YouTube" : "Instagram")
-                }
+                aria-label={fmt(t.common.watchOn, {
+                  provider: video.provider === "YOUTUBE" ? "YouTube" : "Instagram",
+                })}
                 className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition-colors hover:bg-white/30"
               >
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden>
@@ -272,7 +275,7 @@ export function VideoFeed({ videos, startIndex = 0 }: Props) {
 
             {index === 0 && active === 0 ? (
               <p className="pointer-events-none absolute inset-x-0 bottom-2 animate-pulse text-center text-xs text-white/70">
-                Deslize para cima para o pr&oacute;ximo v&iacute;deo
+                {t.videos.swipeHint}
               </p>
             ) : null}
           </section>
@@ -284,7 +287,7 @@ export function VideoFeed({ videos, startIndex = 0 }: Props) {
           role="status"
           className="fixed bottom-6 left-1/2 z-20 -translate-x-1/2 rounded-full bg-white px-5 py-2 text-sm text-ink"
         >
-          Link copiado
+          {t.common.linkCopied}
         </p>
       ) : null}
     </div>

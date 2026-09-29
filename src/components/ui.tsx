@@ -1,6 +1,7 @@
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import type { ReactNode } from "react";
 import { Reveal } from "@/components/Reveal";
+import { getDictionary } from "@/lib/i18n/server";
 
 /** Badge de categoria reutilizado em todo o site (secao 4.4). */
 export function CategoryBadge({
@@ -27,10 +28,10 @@ export function CategoryBadge({
   );
 }
 
-export function SectionHeading({
+export async function SectionHeading({
   title,
   href,
-  linkLabel = "Ver todos",
+  linkLabel,
   eyebrow,
   description,
 }: {
@@ -40,6 +41,7 @@ export function SectionHeading({
   eyebrow?: string;
   description?: string;
 }) {
+  const { t } = await getDictionary();
   return (
     <Reveal className="mb-8 border-b border-line pb-4">
       <div className="flex items-end justify-between gap-4">
@@ -52,7 +54,7 @@ export function SectionHeading({
             href={href}
             className="eyebrow group shrink-0 text-brand hover:underline"
           >
-            {linkLabel}{" "}
+            {linkLabel ?? t.common.seeAll}{" "}
             <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">
               &rarr;
             </span>

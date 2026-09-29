@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { useI18n } from "@/components/I18nProvider";
 
 export type ExpandableItem = { id: string; node: ReactNode };
 
@@ -15,7 +16,7 @@ export function ExpandableSection({
   className,
   initial = 3,
   extra,
-  label = "Ver mais",
+  label,
 }: {
   items: ExpandableItem[];
   /** Classe da grade: a masonry das materias/eventos ou o grid dos videos/imoveis. */
@@ -25,6 +26,7 @@ export function ExpandableSection({
   extra?: ReactNode;
   label?: string;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const hasMore = items.length > initial;
   const visible = open || !hasMore ? items : items.slice(0, initial);
@@ -45,7 +47,7 @@ export function ExpandableSection({
             onClick={() => setOpen(true)}
             className="eyebrow rounded-full border border-brand px-8 py-3 text-brand transition-colors hover:bg-brand hover:text-white"
           >
-            {label} ({items.length - initial})
+            {label ?? t.common.seeMore}
           </button>
         </div>
       ) : null}

@@ -218,14 +218,14 @@ model Video {
 }
 
 model MediaAsset {
-  id       String    @id @default(cuid())
-  url      String
-  type     MediaType @default(IMAGE)
-  width    Int?
-  height   Int?
-  altText  String?
-  position Int       @default(0)
-  createdAt DateTime @default(now())
+  id        String    @id @default(cuid())
+  url       String
+  type      MediaType @default(IMAGE)
+  width     Int?
+  height    Int?
+  altText   String?
+  position  Int       @default(0)
+  createdAt DateTime  @default(now())
 
   eventId    String?
   event      Event?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
@@ -243,37 +243,39 @@ model MediaAsset {
 
 /// Linha única de configuração operada pelo cliente no painel.
 model ApiSettings {
-  id                  String   @id @default("singleton")
-  siteName            String   @default("Portal Institucional")
-  siteDescription     String   @default("Eventos, matérias, imóveis e vídeos.")
+  id                  String    @id @default("singleton")
+  siteName            String    @default("Portal Institucional")
+  siteDescription     String    @default("Eventos, matérias, imóveis e vídeos.")
   clientLogoUrl       String?
   weatherApiKey       String?
-  weatherProvider     String   @default("openweathermap")
-  weatherCity         String   @default("Toledo,PR,BR")
+  /// Chave da API do DeepL (faixa gratis). Sem ela o site mostra o conteudo em portugues.
+  deeplApiKey         String?
+  weatherProvider     String    @default("openweathermap")
+  weatherCity         String    @default("Toledo,PR,BR")
   weatherLat          Float?
   weatherLon          Float?
-  currencyApiProvider String   @default("awesomeapi")
-  cubValue            Decimal? @db.Decimal(12, 2)
+  currencyApiProvider String    @default("awesomeapi")
+  cubValue            Decimal?  @db.Decimal(12, 2)
   cubReference        String?
   cubUpdatedAt        DateTime?
   /// Variacao percentual no mes, quando a fonte informa.
-  cubChangePercent    Decimal? @db.Decimal(6, 2)
+  cubChangePercent    Decimal?  @db.Decimal(6, 2)
   /// De onde veio o valor: "sinduscon", "sinapi" ou "manual".
   cubSource           String?
   /// Qual indice buscar: CUBOESTE/PR (regional) ou CUB/PR (estadual).
-  cubIndex            String   @default("CUBOESTE/PR")
+  cubIndex            String    @default("CUBOESTE/PR")
   /// Com isso ligado, o job mensal sobrescreve o valor com o do Sinduscon.
-  cubAutoUpdate       Boolean  @default(true)
+  cubAutoUpdate       Boolean   @default(true)
   gtmContainerId      String?
-  whatsappNumber      String   @default("5545999999999")
-  whatsappMessage     String   @default("Ola! Gostaria de assinar a revista.")
+  whatsappNumber      String    @default("5545999999999")
+  whatsappMessage     String    @default("Ola! Gostaria de assinar a revista.")
   instagramUrl        String?
   facebookUrl         String?
   youtubeUrl          String?
   contactPhone        String?
   contactEmail        String?
   contactAddress      String?
-  updatedAt           DateTime @updatedAt @default(now())
+  updatedAt           DateTime  @default(now()) @updatedAt
 }
 
 /// Reservado para a evolução do fluxo de assinatura (hoje via WhatsApp).
@@ -283,4 +285,23 @@ model Subscriber {
   whatsapp  String?
   email     String?
   createdAt DateTime @default(now())
+}
+
+/// Traducao automatica de um campo de conteudo (materia, evento, imovel...).
+/// O portugues continua no proprio registro; aqui ficam so en e es.
+model Translation {
+  id         String   @id @default(cuid())
+  locale     String
+  /// "article" | "event" | "property" | "video" | "issue" | "category"
+  model      String
+  recordId   String
+  field      String
+  value      String   @db.Text
+  /// SHA-256 do texto em portugues no momento da traducao: se o original
+  /// mudar, o hash muda e o campo e retraduzido; se nao, nao gasta cota.
+  sourceHash String
+  updatedAt  DateTime @updatedAt
+
+  @@unique([locale, model, recordId, field])
+  @@index([model, recordId])
 }

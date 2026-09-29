@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { VideoThumb } from "@/components/VideoThumb";
+import { useI18n } from "@/components/I18nProvider";
+import { fmt } from "@/lib/i18n/locales";
 
 /**
  * O iframe so entra no DOM depois do clique: mantem o usuario dentro do site
@@ -22,6 +24,7 @@ export function LazyEmbed({
   title: string;
   vertical?: boolean;
 }) {
+  const { t } = useI18n();
   const [playing, setPlaying] = useState(false);
   const ratio = vertical ? "aspect-[9/16]" : "aspect-video";
 
@@ -45,7 +48,7 @@ export function LazyEmbed({
       type="button"
       onClick={() => setPlaying(true)}
       className={"group relative block w-full overflow-hidden bg-ink " + ratio}
-      aria-label={"Reproduzir: " + title}
+      aria-label={fmt(t.common.play, { title })}
     >
       <VideoThumb
         embedId={embedId}
