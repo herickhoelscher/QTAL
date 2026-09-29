@@ -38,7 +38,7 @@ export default async function AboutPage() {
         <div className="mt-14 border-t border-line pt-8">
           <p className="eyebrow text-muted">Produção digital</p>
           <p className="mt-3 text-muted">
-            Projeto desenvolvido por Herick Neumann para a agência BSEC.
+            Projeto desenvolvido por B7.
           </p>
         </div>
       </Section>

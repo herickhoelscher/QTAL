@@ -10,7 +10,12 @@ import { slugify, uniqueSlug } from "@/lib/slug";
 import { parseVideoUrl } from "@/lib/video";
 import type { ActionState } from "@/app/admin/actions/auth";
 
-type GalleryInput = { url: string; altText?: string | null; album?: string | null };
+type GalleryInput = {
+  url: string;
+  altText?: string | null;
+  album?: string | null;
+  featured?: boolean;
+};
 
 function text(formData: FormData, key: string): string {
   return String(formData.get(key) ?? "").trim();
@@ -115,6 +120,7 @@ export async function saveArticle(
       data: gallery.map((item, position) => ({
         url: item.url,
         altText: item.altText || null,
+        featured: Boolean(item.featured),
         position,
         articleId: article.id,
       })),
@@ -181,6 +187,7 @@ export async function saveEvent(_state: ActionState, formData: FormData): Promis
       data: gallery.map((item, position) => ({
         url: item.url,
         altText: item.altText || null,
+        featured: Boolean(item.featured),
         album: item.album || null,
         position,
         eventId: event.id,
@@ -259,6 +266,7 @@ export async function saveProperty(
       data: gallery.map((item, position) => ({
         url: item.url,
         altText: item.altText || null,
+        featured: Boolean(item.featured),
         position,
         propertyId: property.id,
       })),

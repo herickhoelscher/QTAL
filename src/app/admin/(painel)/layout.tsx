@@ -29,7 +29,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
               <span className="font-display text-xl italic">{settings.siteName}</span>
             )}
             <span className="h-6 w-px bg-line" aria-hidden />
-            <span className="eyebrow text-muted">BSEC</span>
+            <span className="eyebrow text-muted">B7</span>
           </div>
 
           <div className="flex items-center gap-4">

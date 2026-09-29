@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Suspense } from "react";
 import { AdCard, ContentCard } from "@/components/cards";
+import { CategoryTabs, type TabItem } from "@/components/CategoryTabs";
 import { Reveal } from "@/components/Reveal";
 import { EmptyState, PageHeader, Section } from "@/components/ui";
 import { prisma } from "@/lib/prisma";
@@ -30,6 +31,31 @@ export default async function ArticlesPage() {
     prisma.category.findMany({ where: { type: "ARTICLE" }, orderBy: { name: "asc" } }),
   ]);
 
+  const items: TabItem[] = articles.map((article, index) => ({
+    id: article.id,
+    slugs: article.categories.map((category) => category.slug),
+    node: (
+      <Reveal index={index}>
+        <ContentCard
+          href={"/materias/" + article.slug}
+          title={article.title}
+          excerpt={article.subtitle ?? excerpt(article.body)}
+          image={article.coverImage}
+          imageAlt={article.coverAlt}
+          categories={article.categories}
+          categoryHrefPrefix="/materias/categoria/"
+          date={article.publishedAt ?? article.createdAt}
+          edition={
+            article.issueItems[0] ? editionLabel(article.issueItems[0].issue.title) : null
+          }
+          aspect={index % 3 === 0 ? "3/4" : "4/3"}
+          headingLevel={2}
+          priority={index < 3}
+        />
+      </Reveal>
+    ),
+  }));
+
   return (
     <>
       <PageHeader
@@ -40,50 +66,24 @@ export default async function ArticlesPage() {
 
       <div className="bg-surface-alt">
         <Section wide>
-        {categories.length ? (
-          <nav aria-label="Categorias" className="mb-10 flex flex-wrap gap-x-5 gap-y-2">
-            <span className="eyebrow text-ink">Todas</span>
-            {categories.map((category) => (
-              <Link
-                key={category.id}
-                href={"/materias/categoria/" + category.slug}
-                className="eyebrow text-muted hover:text-brand"
-              >
-                {category.name}
-              </Link>
-            ))}
-          </nav>
-        ) : null}
-
-        {articles.length ? (
-          <div className="masonry-2">
-            {articles.map((article, index) => (
-              <Reveal key={article.id} index={index}>
-                <ContentCard
-                  href={"/materias/" + article.slug}
-                  title={article.title}
-                  excerpt={article.subtitle ?? excerpt(article.body)}
-                  image={article.coverImage}
-                  imageAlt={article.coverAlt}
-                  categories={article.categories}
-                  categoryHrefPrefix="/materias/categoria/"
-                  date={article.publishedAt ?? article.createdAt}
-                  edition={
-                    article.issueItems[0] ? editionLabel(article.issueItems[0].issue.title) : null
-                  }
-                  aspect={index % 3 === 0 ? "3/4" : "4/3"}
-                  headingLevel={2}
-                  priority={index < 3}
-                />
-              </Reveal>
-            ))}
-            <Reveal index={4}>
-              <AdCard advertiser="Seu anúncio aqui" />
-            </Reveal>
-          </div>
-        ) : (
-          <EmptyState>Nenhuma matéria publicada até agora.</EmptyState>
-        )}
+          {articles.length ? (
+            <Suspense fallback={null}>
+              <CategoryTabs
+                categories={categories.map((category) => ({
+                  slug: category.slug,
+                  name: category.name,
+                }))}
+                items={items}
+                extra={
+                  <Reveal index={4}>
+                    <AdCard advertiser="Seu anúncio aqui" />
+                  </Reveal>
+                }
+              />
+            </Suspense>
+          ) : (
+            <EmptyState>Nenhuma matéria publicada até agora.</EmptyState>
+          )}
         </Section>
       </div>
     </>

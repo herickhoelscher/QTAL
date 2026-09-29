@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { HeroCarousel, type HeroSlide } from "@/components/HeroCarousel";
 import { AdCard, ContentCard, PropertyCard, VideoCard } from "@/components/cards";
+import { ExpandableSection } from "@/components/ExpandableSection";
 import { Reveal } from "@/components/Reveal";
 import { VideoFeedCallout } from "@/components/VideoFeedCallout";
 import { SubscribeBlock } from "@/components/SubscribeBlock";
@@ -120,32 +121,38 @@ export default async function HomePage() {
             description="Arquitetura, mercado imobiliário e o cotidiano da região, apurados com tempo de revista e publicados no ritmo de portal."
           />
           {articles.length ? (
-            <div className="masonry-2">
-              {articles.map((article, index) => (
-                <Reveal key={article.id} index={index}>
-                  <ContentCard
-                    href={"/materias/" + article.slug}
-                    title={article.title}
-                    excerpt={article.subtitle ?? excerpt(article.body)}
-                    image={article.coverImage}
-                    imageAlt={article.coverAlt}
-                    categories={article.categories}
-                    categoryHrefPrefix="/materias/categoria/"
-                    date={article.publishedAt ?? article.createdAt}
-                    edition={
-                      article.issueItems[0]
-                        ? editionLabel(article.issueItems[0].issue.title)
-                        : null
-                    }
-                    aspect={article.featured ? "3/4" : "4/3"}
-                  />
+            <ExpandableSection
+              className="masonry-2"
+              items={articles.map((article, index) => ({
+                id: article.id,
+                node: (
+                  <Reveal index={index}>
+                    <ContentCard
+                      href={"/materias/" + article.slug}
+                      title={article.title}
+                      excerpt={article.subtitle ?? excerpt(article.body)}
+                      image={article.coverImage}
+                      imageAlt={article.coverAlt}
+                      categories={article.categories}
+                      categoryHrefPrefix="/materias/categoria/"
+                      date={article.publishedAt ?? article.createdAt}
+                      edition={
+                        article.issueItems[0]
+                          ? editionLabel(article.issueItems[0].issue.title)
+                          : null
+                      }
+                      aspect={article.featured ? "3/4" : "4/3"}
+                    />
+                  </Reveal>
+                ),
+              }))}
+              /* Publieditorial identificado, no padrao das duas referencias. */
+              extra={
+                <Reveal index={3}>
+                  <AdCard advertiser="Seu anúncio aqui" />
                 </Reveal>
-              ))}
-              {/* Publieditorial identificado, no padrao das duas referencias. */}
-              <Reveal index={3}>
-                <AdCard advertiser="Seu anúncio aqui" />
-              </Reveal>
-            </div>
+              }
+            />
           ) : (
             <EmptyState>Nenhuma matéria publicada.</EmptyState>
           )}
@@ -161,24 +168,28 @@ export default async function HomePage() {
             description="A cobertura fotográfica das noites que movimentam a cidade — cada evento com galeria completa e os vídeos da noite."
           />
           {events.length ? (
-            <div className="masonry-2">
-              {events.map((event, index) => (
-                <Reveal key={event.id} index={index}>
-                  <ContentCard
-                    href={"/eventos/" + event.slug}
-                    title={event.title}
-                    excerpt={event.description ? excerpt(event.description, 120) : null}
-                    image={event.coverImage}
-                    imageAlt={event.coverAlt}
-                    categories={event.categories}
-                    date={event.date}
-                    relative={false}
-                    meta={event.location ?? undefined}
-                    aspect={index % 3 === 0 ? "3/4" : "4/3"}
-                  />
-                </Reveal>
-              ))}
-            </div>
+            <ExpandableSection
+              className="masonry-2"
+              items={events.map((event, index) => ({
+                id: event.id,
+                node: (
+                  <Reveal index={index}>
+                    <ContentCard
+                      href={"/eventos/" + event.slug}
+                      title={event.title}
+                      excerpt={event.description ? excerpt(event.description, 120) : null}
+                      image={event.coverImage}
+                      imageAlt={event.coverAlt}
+                      categories={event.categories}
+                      date={event.date}
+                      relative={false}
+                      meta={event.location ?? undefined}
+                      aspect={index % 3 === 0 ? "3/4" : "4/3"}
+                    />
+                  </Reveal>
+                ),
+              }))}
+            />
           ) : (
             <EmptyState>Nenhum evento publicado.</EmptyState>
           )}
@@ -198,22 +209,26 @@ export default async function HomePage() {
               <Reveal>
                 <VideoFeedCallout />
               </Reveal>
-              <div className="grid items-start gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                {videos.map((video, index) => (
-                  <Reveal key={video.id} index={index}>
-                    <VideoCard
-                      href={"/videos/" + video.slug}
-                      feedHref={"/videos/feed?v=" + video.slug}
-                      title={video.title}
-                      embedId={video.embedId}
-                      customThumbnail={video.customThumbnail}
-                      vertical={video.vertical}
-                      provider={video.provider === "YOUTUBE" ? "YouTube" : "Instagram"}
-                      eventTitle={video.event?.title}
-                    />
-                  </Reveal>
-                ))}
-              </div>
+              <ExpandableSection
+                className="grid items-start gap-8 sm:grid-cols-2 lg:grid-cols-3"
+                items={videos.map((video, index) => ({
+                  id: video.id,
+                  node: (
+                    <Reveal index={index}>
+                      <VideoCard
+                        href={"/videos/" + video.slug}
+                        feedHref={"/videos/feed?v=" + video.slug}
+                        title={video.title}
+                        embedId={video.embedId}
+                        customThumbnail={video.customThumbnail}
+                        vertical={video.vertical}
+                        provider={video.provider === "YOUTUBE" ? "YouTube" : "Instagram"}
+                        eventTitle={video.event?.title}
+                      />
+                    </Reveal>
+                  ),
+                }))}
+              />
             </>
           ) : (
             <EmptyState>Nenhum vídeo publicado.</EmptyState>
@@ -230,26 +245,30 @@ export default async function HomePage() {
             description="Uma seleção do que está à venda na região, com ficha técnica completa e contato direto pelo WhatsApp."
           />
           {properties.length ? (
-            <div className="grid items-start gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {properties.map((property, index) => (
-                <Reveal key={property.id} index={index}>
-                  <PropertyCard
-                    href={"/imoveis/" + property.slug}
-                    title={property.title}
-                    image={property.coverImage}
-                    city={property.city}
-                    region={property.region}
-                    type={property.type}
-                    price={property.price ? Number(property.price) : null}
-                    priceOnRequest={property.priceOnRequest}
-                    area={property.area}
-                    bedrooms={property.bedrooms}
-                    bathrooms={property.bathrooms}
-                    garageSpots={property.garageSpots}
-                  />
-                </Reveal>
-              ))}
-            </div>
+            <ExpandableSection
+              className="grid items-start gap-8 sm:grid-cols-2 lg:grid-cols-3"
+              items={properties.map((property, index) => ({
+                id: property.id,
+                node: (
+                  <Reveal index={index}>
+                    <PropertyCard
+                      href={"/imoveis/" + property.slug}
+                      title={property.title}
+                      image={property.coverImage}
+                      city={property.city}
+                      region={property.region}
+                      type={property.type}
+                      price={property.price ? Number(property.price) : null}
+                      priceOnRequest={property.priceOnRequest}
+                      area={property.area}
+                      bedrooms={property.bedrooms}
+                      bathrooms={property.bathrooms}
+                      garageSpots={property.garageSpots}
+                    />
+                  </Reveal>
+                ),
+              }))}
+            />
           ) : (
             <EmptyState>Nenhum imóvel publicado.</EmptyState>
           )}

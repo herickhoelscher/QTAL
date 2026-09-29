@@ -103,7 +103,6 @@ export default async function VideoPage({ params }: Params) {
                 Assistir no {providerLabel(video.provider)}
               </a>
               <div className="mt-6">
-                <p className="eyebrow mb-3 text-white/70">Compartilhar</p>
                 <ShareButtons title={video.title} path={"/videos/" + video.slug} tone="light" />
               </div>
             </div>

@@ -2,24 +2,15 @@ import { SiteHeader, type NavItem } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { DataBar } from "@/components/DataBar";
 import { UtilityBar } from "@/components/UtilityBar";
-import { prisma } from "@/lib/prisma";
 import { getSettings, whatsappLink } from "@/lib/settings";
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const [settings, articleCategories] = await Promise.all([
-    getSettings(),
-    prisma.category.findMany({ where: { type: "ARTICLE" }, orderBy: { name: "asc" } }),
-  ]);
+  const settings = await getSettings();
 
+  // As editorias sairam do menu: agora elas vivem como abas dentro de /materias,
+  // onde o leitor filtra sem sair da pagina.
   const nav: NavItem[] = [
-    {
-      label: "Matérias",
-      href: "/materias",
-      children: articleCategories.map((category) => ({
-        label: category.name,
-        href: "/materias/categoria/" + category.slug,
-      })),
-    },
+    { label: "Matérias", href: "/materias" },
     { label: "Eventos", href: "/eventos" },
     { label: "Imóveis", href: "/imoveis" },
     { label: "Vídeos", href: "/videos" },
@@ -34,6 +25,11 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         logoUrl={settings.clientLogoUrl}
         nav={nav}
         subscribeHref="/assine"
+        social={{
+          instagram: settings.instagramUrl,
+          facebook: settings.facebookUrl,
+          youtube: settings.youtubeUrl,
+        }}
         dataBar={<DataBar />}
         utilityBar={
           <UtilityBar

@@ -234,6 +234,9 @@ model MediaAsset {
   propertyId String?
   property   Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
+  /// Foto de destaque: abre grande no topo da galeria. Uma por album.
+  featured Boolean @default(false)
+
   /// Agrupamento opcional de fotos em blocos/álbuns dentro de um evento.
   album String?
 }

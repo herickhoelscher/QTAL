@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { SocialLinks, type SocialUrls } from "@/components/social-icons";
 
 export type NavItem = { label: string; href: string; children?: NavItem[] };
 
@@ -12,6 +13,8 @@ type Props = {
   logoUrl?: string | null;
   nav: NavItem[];
   subscribeHref: string;
+  /** Redes sociais; no celular elas so existem aqui, dentro do menu. */
+  social?: SocialUrls;
   /** Barra de dados automaticos, renderizada no servidor e embutida aqui. */
   dataBar: ReactNode;
   /** Faixa escura de redes sociais acima do header (desktop). */
@@ -24,7 +27,15 @@ type Props = {
  * rota) vira solida. O estado e publicado em data-topbar, e a barra de dados
  * se adapta por CSS — assim o componente de dados continua sendo server-side.
  */
-export function SiteHeader({ siteName, logoUrl, nav, subscribeHref, dataBar, utilityBar }: Props) {
+export function SiteHeader({
+  siteName,
+  logoUrl,
+  nav,
+  subscribeHref,
+  social,
+  dataBar,
+  utilityBar,
+}: Props) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
@@ -168,6 +179,18 @@ export function SiteHeader({ siteName, logoUrl, nav, subscribeHref, dataBar, uti
                   </motion.li>
                 ))}
               </ul>
+
+              {social ? (
+                <div className="mt-10 border-t border-line pt-6 md:hidden">
+                  <p className="eyebrow mb-3 text-muted">M&iacute;dias sociais</p>
+                  <SocialLinks
+                    social={social}
+                    variant="outline"
+                    size={18}
+                    className="[&_a]:border-line [&_a]:text-ink [&_a:hover]:bg-brand [&_a:hover]:text-white"
+                  />
+                </div>
+              ) : null}
             </nav>
           </motion.div>
         )}

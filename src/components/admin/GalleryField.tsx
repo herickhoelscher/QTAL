@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 
-export type GalleryItem = { url: string; altText?: string | null; album?: string | null };
+export type GalleryItem = {
+  url: string;
+  altText?: string | null;
+  album?: string | null;
+  featured?: boolean;
+};
 
 /**
  * Galeria de fotos do evento/imovel. Permite enviar varias imagens de uma vez,
@@ -37,7 +42,7 @@ export function GalleryField({
         const response = await fetch("/api/admin/upload", { method: "POST", body });
         const json = (await response.json()) as { url?: string; error?: string };
         if (!response.ok || !json.url) throw new Error(json.error ?? "Falha no upload.");
-        uploaded.push({ url: json.url, altText: "", album: "" });
+        uploaded.push({ url: json.url, altText: "", album: "", featured: false });
       } catch (uploadError) {
         setError(uploadError instanceof Error ? uploadError.message : "Falha no upload.");
       }
@@ -50,6 +55,22 @@ export function GalleryField({
     setItems((current) =>
       current.map((item, i) => (i === index ? { ...item, ...patch } : item)),
     );
+  }
+
+  /**
+   * Um destaque por album: marcar uma foto desmarca a anterior do mesmo bloco.
+   * Clicar na que ja esta marcada desmarca e a galeria volta a destacar a
+   * primeira da ordem.
+   */
+  function toggleFeatured(index: number) {
+    setItems((current) => {
+      const album = current[index].album ?? "";
+      const turningOn = !current[index].featured;
+      return current.map((item, i) => {
+        if ((item.album ?? "") !== album) return item;
+        return { ...item, featured: turningOn && i === index };
+      });
+    });
   }
 
   function move(index: number, offset: number) {
@@ -106,7 +127,16 @@ export function GalleryField({
                     className="w-full border border-line px-2 py-1 text-xs"
                   />
                 ) : null}
-                <div className="flex gap-3 text-xs">
+                <div className="flex items-center gap-3 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => toggleFeatured(index)}
+                    aria-pressed={Boolean(item.featured)}
+                    title="Abre grande no topo da galeria"
+                    className={item.featured ? "text-brand" : "text-muted"}
+                  >
+                    {item.featured ? "★ destaque" : "☆ destacar"}
+                  </button>
                   <button type="button" onClick={() => move(index, -1)} className="text-muted">
                     ← mover
                   </button>

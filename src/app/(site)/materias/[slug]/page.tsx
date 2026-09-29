@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ContentCard, VideoCard } from "@/components/cards";
+import { PhotoGallery } from "@/components/PhotoGallery";
 import { ShareButtons } from "@/components/ShareButtons";
 import { ViewCounter } from "@/components/ViewCounter";
 import { CategoryBadge, Section, SectionHeading } from "@/components/ui";
@@ -135,18 +136,8 @@ export default async function ArticlePage({ params }: Params) {
         />
 
         {article.gallery.length ? (
-          <div className="mt-12 grid gap-4 sm:grid-cols-2">
-            {article.gallery.map((media) => (
-              <figure key={media.id} className="relative aspect-[4/3] bg-surface-alt">
-                <Image
-                  src={media.url}
-                  alt={media.altText ?? ""}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 400px"
-                  className="object-cover"
-                />
-              </figure>
-            ))}
+          <div className="mt-12">
+            <PhotoGallery photos={article.gallery} fallbackAlt={article.title} />
           </div>
         ) : null}
 
@@ -174,7 +165,6 @@ export default async function ArticlePage({ params }: Params) {
         ) : null}
 
         <div className="mt-12 border-t border-line pt-6">
-          <p className="eyebrow mb-3 text-muted">Compartilhar</p>
           <ShareButtons title={article.title} path={"/materias/" + article.slug} />
         </div>
       </Section>

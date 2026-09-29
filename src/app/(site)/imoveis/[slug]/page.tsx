@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { PhotoGallery } from "@/components/PhotoGallery";
 import { ShareButtons } from "@/components/ShareButtons";
 import { VideoCard } from "@/components/cards";
 import { Section } from "@/components/ui";
@@ -119,18 +120,8 @@ export default async function PropertyPage({ params }: Params) {
             ) : null}
 
             {property.gallery.length ? (
-              <div className="mt-10 grid gap-3 sm:grid-cols-2">
-                {property.gallery.map((media) => (
-                  <figure key={media.id} className="relative aspect-[4/3] bg-surface-alt">
-                    <Image
-                      src={media.url}
-                      alt={media.altText ?? property.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 400px"
-                      className="object-cover"
-                    />
-                  </figure>
-                ))}
+              <div className="mt-10">
+                <PhotoGallery photos={property.gallery} fallbackAlt={property.title} />
               </div>
             ) : null}
 

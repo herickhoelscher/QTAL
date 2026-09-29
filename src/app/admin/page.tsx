@@ -20,7 +20,7 @@ export default async function AdminLoginPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 flex items-end justify-between gap-4">
           <p className="font-display text-2xl italic">{settings.siteName}</p>
-          <p className="eyebrow text-muted">BSEC</p>
+          <p className="eyebrow text-muted">B7</p>
         </div>
 
         <div className="border border-line bg-surface p-8">

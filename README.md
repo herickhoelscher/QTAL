@@ -1,4 +1,4 @@
-# Portal Institucional Multiconteúdo — BSEC
+# Portal Institucional Multiconteúdo — B7
 
 Portal com identidade de revista digital e quatro frentes de conteúdo (Matérias, Eventos,
 Imóveis e Vídeos), painel administrativo próprio e barra de dados automáticos (clima, dólar

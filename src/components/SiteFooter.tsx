@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { NavItem } from "@/components/SiteHeader";
+import { SocialLinks, socialList, type SocialUrls } from "@/components/social-icons";
 
 type Props = {
   siteName: string;
@@ -9,20 +10,12 @@ type Props = {
     email?: string | null;
     address?: string | null;
   };
-  social: {
-    instagram?: string | null;
-    facebook?: string | null;
-    youtube?: string | null;
-  };
+  social: SocialUrls;
   subscribeHref: string;
 };
 
 export function SiteFooter({ siteName, nav, contact, social, subscribeHref }: Props) {
-  const socialLinks = [
-    { label: "Instagram", href: social.instagram },
-    { label: "Facebook", href: social.facebook },
-    { label: "YouTube", href: social.youtube },
-  ].filter((item): item is { label: string; href: string } => Boolean(item.href));
+  const hasSocial = socialList(social).length > 0;
 
   return (
     <footer className="mt-auto bg-brand text-white">
@@ -33,21 +26,11 @@ export function SiteFooter({ siteName, nav, contact, social, subscribeHref }: Pr
             Eventos, mat&eacute;rias, im&oacute;veis e v&iacute;deos da regi&atilde;o, em um s&oacute;
             lugar.
           </p>
-          {socialLinks.length ? (
-            <ul className="mt-6 flex flex-wrap gap-3">
-              {socialLinks.map((item) => (
-                <li key={item.label}>
-                  <a
-                    href={item.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="eyebrow rounded-full border border-white/50 px-4 py-2 transition-colors hover:bg-white hover:text-brand"
-                  >
-                    {item.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
+          {hasSocial ? (
+            <div className="mt-8">
+              <p className="eyebrow text-white/90">M&iacute;dias sociais</p>
+              <SocialLinks social={social} variant="outline" size={18} className="mt-4" />
+            </div>
           ) : null}
         </div>
 
@@ -97,7 +80,7 @@ export function SiteFooter({ siteName, nav, contact, social, subscribeHref }: Pr
           <p>
             &copy; {new Date().getFullYear()} {siteName}. Todos os direitos reservados.
           </p>
-          <p>Desenvolvido por Herick Neumann para a ag&ecirc;ncia BSEC.</p>
+          <p>Desenvolvido por B7.</p>
         </div>
       </div>
     </footer>

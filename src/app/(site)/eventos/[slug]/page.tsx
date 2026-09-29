@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { VideoCard } from "@/components/cards";
+import { PhotoGallery } from "@/components/PhotoGallery";
 import { ShareButtons } from "@/components/ShareButtons";
 import { CategoryBadge, Section, SectionHeading } from "@/components/ui";
 import { prisma } from "@/lib/prisma";
@@ -115,7 +116,6 @@ export default async function EventPage({ params }: Params) {
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(event.description) }}
           />
           <div className="mt-10 border-t border-line pt-6">
-            <p className="eyebrow mb-3 text-muted">Compartilhar</p>
             <ShareButtons title={event.title} path={"/eventos/" + event.slug} />
           </div>
         </Section>
@@ -127,19 +127,7 @@ export default async function EventPage({ params }: Params) {
           {[...albums.entries()].map(([album, items]) => (
             <div key={album || "geral"} className="mb-12 last:mb-0">
               {album ? <p className="eyebrow mb-4 text-brand">{album}</p> : null}
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {items.map((media) => (
-                  <figure key={media.id} className="relative aspect-[4/3] bg-surface-alt">
-                    <Image
-                      src={media.url}
-                      alt={media.altText ?? event.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 400px"
-                      className="object-cover"
-                    />
-                  </figure>
-                ))}
-              </div>
+              <PhotoGallery photos={items} fallbackAlt={event.title} />
             </div>
           ))}
         </Section>

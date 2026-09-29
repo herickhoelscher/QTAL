@@ -8,7 +8,7 @@ nada do que está aqui.
 Acesse `seusite.com.br/admin`, informe e-mail e senha. A sessão dura 8 horas; depois disso o
 painel pede a senha de novo.
 
-No topo de todas as telas ficam a sua logo e a marca da BSEC, o link **Ver o site** e o
+No topo de todas as telas ficam a sua logo e a marca da B7, o link **Ver o site** e o
 botão **Sair**.
 
 ## O que existe em cada seção
