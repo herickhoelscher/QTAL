@@ -37,6 +37,9 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  /* A Playfair desenha numeros "de estilo antigo", que sobem e descem da
+     linha (R$780.000 parecia desalinhado). Aqui todos ficam na mesma altura. */
+  font-variant-numeric: lining-nums;
 }
 
 /* Foco sempre visivel — requisito de acessibilidade do checklist de QA. */
