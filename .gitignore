@@ -43,3 +43,6 @@ next-env.d.ts
 
 # uploads locais (fallback quando o Cloudflare nao esta configurado)
 /public/uploads
+
+# Mockups do brainstorm (local, nao versionado)
+.superpowers/
