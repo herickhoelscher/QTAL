@@ -18,6 +18,14 @@
   --color-muted: #6b6b6b;
   --color-line: #e4e0da;
 
+  /* Usados so pelo painel (redefinidos em .admin-theme, mais abaixo). */
+  --color-on-brand: #ffffff;
+  --color-link: #0a66c2;
+  --color-danger: #c8102e;
+  --color-chrome: #050816;
+  --color-chrome-active: #1d2236;
+  --color-page: #eef2f7;
+
   --font-display: var(--font-playfair), Georgia, "Times New Roman", serif;
   --font-sans: var(--font-inter), Helvetica, Arial, sans-serif;
 
@@ -26,6 +34,55 @@
 
 :root {
   color-scheme: light;
+}
+
+/* ---------------------------------------------------------------
+   Painel administrativo. O <html> do painel leva a classe admin-theme,
+   que troca os tokens acima pela paleta do painel do cliente (marinho
+   quase preto, cinzas-azulados). Os componentes do painel usam os mesmos
+   utilitarios do site (bg-surface, text-muted...) e mudam de cor sozinhos;
+   o site publico nao e tocado.
+   --------------------------------------------------------------- */
+.admin-theme {
+  --color-ink: #0b1220;
+  --color-brand: #050816;
+  --color-brand-dark: #1c2340;
+  --color-on-brand: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f6f8fb;
+  --color-muted: #4f6582;
+  --color-line: #dde3ec;
+  --color-link: #0a66c2;
+  --color-danger: #c8102e;
+  --color-chrome: #050816;
+  --color-chrome-active: #1d2236;
+  --color-page: #eef2f7;
+
+  --font-sans: var(--font-nunito), Helvetica, Arial, sans-serif;
+  --font-display: var(--font-nunito), Helvetica, Arial, sans-serif;
+}
+
+/* Nos campos do painel o foco ja aparece como borda escura arredondada
+   (focus:ring); o contorno quadrado global ficaria por cima dela. */
+.admin-theme :where(input:not([type="checkbox"], [type="radio"]), select, textarea):focus-visible {
+  outline: none;
+}
+
+.admin-theme[data-theme="dark"] {
+  color-scheme: dark;
+  --color-ink: #e6eaf2;
+  --color-brand: #e6eaf2;
+  --color-brand-dark: #c3cbdb;
+  --color-on-brand: #050816;
+  --color-surface: #0d1326;
+  --color-surface-alt: #131a31;
+  --color-muted: #9aabc4;
+  --color-line: #263049;
+  --color-link: #6cb2ff;
+  --color-danger: #ff6b81;
+  --color-chrome: #03050f;
+  --color-chrome-active: #1d2236;
+  --color-page: #070b18;
 }
 
 html {
@@ -266,4 +323,19 @@ body {
 
 .databar-scroller::-webkit-scrollbar {
   display: none;
+}
+
+/* Paginas do leitor folheavel (FlipbookReader). A biblioteca posiciona e
+   dimensiona cada .flip-page; a imagem so precisa preencher a pagina. */
+.flip-page {
+  background: #fff;
+  overflow: hidden;
+}
+.flip-page img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  pointer-events: none;
 }

@@ -46,7 +46,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     prisma.category.findMany({ where: { type: "ARTICLE" }, select: { slug: true } }),
   ]);
 
-  const staticRoutes = ["", "/materias", "/eventos", "/imoveis", "/videos", "/assine", "/sobre"];
+  const staticRoutes = ["", "/materias", "/eventos", "/imoveis", "/videos", "/edicoes", "/assine", "/sobre"];
 
   return [
     ...staticRoutes.flatMap((route) =>
@@ -73,6 +73,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ),
     ...videos.flatMap((item) =>
       localized("/videos/" + item.slug, { lastModified: item.updatedAt, priority: 0.6 }),
+    ),
+    ...issues.flatMap((item) =>
+      localized("/edicoes/" + item.slug, { lastModified: item.updatedAt, priority: 0.6 }),
     ),
     ...issues.flatMap((item) =>
       localized("/modo-revista/" + item.slug, { lastModified: item.updatedAt, priority: 0.6 }),

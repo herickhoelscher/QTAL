@@ -15,10 +15,39 @@ export type HeroSlide = {
   category?: string | null;
 };
 
+/** Seta lateral do heroi: circulo vazado sobre a foto, como na referencia. */
+function HeroArrow({
+  direction,
+  label,
+  onClick,
+}: {
+  direction: "prev" | "next";
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={
+        "absolute top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/70 bg-black/20 text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-ink md:h-14 md:w-14 " +
+        (direction === "prev" ? "left-3 md:left-6" : "right-3 md:right-6")
+      }
+    >
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+        <path d={direction === "prev" ? "M15 5l-7 7 7 7" : "M9 5l7 7-7 7"} />
+      </svg>
+    </button>
+  );
+}
+
 /** Heroi full-bleed da home: imagem grande, overlay escuro e titulo editorial. */
 export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   const { t } = useI18n();
   const [index, setIndex] = useState(0);
+  // Mouse em cima ou foco dentro: a troca automatica espera o leitor.
+  const [paused, setPaused] = useState(false);
   const total = slides.length;
 
   const go = useCallback(
@@ -27,18 +56,31 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   );
 
   useEffect(() => {
-    if (total < 2) return;
+    if (total < 2 || paused) return;
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (media.matches) return;
     const id = setInterval(() => setIndex((current) => (current + 1) % total), 7000);
     return () => clearInterval(id);
-  }, [total]);
+  }, [total, paused, index]);
 
   if (!total) return null;
   const slide = slides[index];
 
   return (
-    <section className="hero-under-topbar relative h-[88vh] min-h-[560px] w-full overflow-hidden bg-ink">
+    <section
+      aria-roledescription="carousel"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false);
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowLeft") go(index - 1);
+        if (event.key === "ArrowRight") go(index + 1);
+      }}
+      className="hero-under-topbar relative h-[88vh] min-h-[560px] w-full overflow-hidden bg-ink"
+    >
       <AnimatePresence mode="wait">
         <motion.div
           key={index}
@@ -100,6 +142,13 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
 
         </div>
       </div>
+
+      {total > 1 ? (
+        <>
+          <HeroArrow direction="prev" label={t.hero.prev} onClick={() => go(index - 1)} />
+          <HeroArrow direction="next" label={t.hero.next} onClick={() => go(index + 1)} />
+        </>
+      ) : null}
 
       {/* Indicador em tracos, centralizado no rodape do heroi — o padrao da
           referencia editorial, menos "carrossel de e-commerce" que bolinhas. */}

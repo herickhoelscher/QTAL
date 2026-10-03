@@ -12,6 +12,7 @@ export type ActionState = { error?: string; success?: string };
 export async function login(_state: ActionState, formData: FormData): Promise<ActionState> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
+  const remember = formData.get("remember") === "on";
 
   if (!email || !password) {
     return { error: "Informe e-mail e senha." };
@@ -24,12 +25,15 @@ export async function login(_state: ActionState, formData: FormData): Promise<Ac
     return { error: "E-mail ou senha incorretos." };
   }
 
-  await createSession({
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-  });
+  await createSession(
+    {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+    { remember },
+  );
 
   redirect("/admin/dashboard");
 }
@@ -47,9 +51,11 @@ export async function saveUser(_state: ActionState, formData: FormData): Promise
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const role = String(formData.get("role") ?? "EDITOR") as AdminRole;
   const password = String(formData.get("password") ?? "");
+  const confirmation = String(formData.get("passwordConfirmation") ?? "");
   const active = formData.get("active") === "on";
 
   if (!name || !email) return { error: "Nome e e-mail são obrigatórios." };
+  if (password !== confirmation) return { error: "A senha e a confirmação não conferem." };
 
   const duplicated = await prisma.adminUser.findFirst({
     where: { email, ...(id ? { id: { not: id } } : {}) },
@@ -77,7 +83,7 @@ export async function saveUser(_state: ActionState, formData: FormData): Promise
   }
 
   revalidatePath("/admin/usuarios");
-  return { success: "Usuário salvo." };
+  redirect("/admin/usuarios?salvo=1");
 }
 
 export async function deleteUser(formData: FormData) {
@@ -86,4 +92,5 @@ export async function deleteUser(formData: FormData) {
   if (id === session.id) return;
   await prisma.adminUser.delete({ where: { id } });
   revalidatePath("/admin/usuarios");
+  if (formData.get("redirectTo")) redirect("/admin/usuarios");
 }

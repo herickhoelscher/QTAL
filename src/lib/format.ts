@@ -64,6 +64,20 @@ export function formatDateShort(date: Date | string, locale: Locale = DEFAULT_LO
   return SHORT_DATE[locale].format(new Date(date));
 }
 
+const DATE_TIME = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "America/Sao_Paulo",
+});
+
+/** "01/10/2026 15:11" — coluna "Atualizado" das listas do painel (so portugues). */
+export function formatDateTime(date: Date | string): string {
+  return DATE_TIME.format(new Date(date)).replace(",", "");
+}
+
 /** "3 dias atras" — usado no rodape dos cards do feed. */
 export function timeAgo(date: Date | string, locale: Locale = DEFAULT_LOCALE): string {
   const rtf = new Intl.RelativeTimeFormat(LOCALE_TAG[locale], { numeric: "auto" });

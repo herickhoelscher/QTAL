@@ -9,9 +9,10 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import {
   Checkbox,
   Field,
+  FormActions,
+  FormError,
   FormSection,
   Select,
-  SubmitButton,
   TextArea,
   TextInput,
 } from "@/components/admin/form";
@@ -47,11 +48,7 @@ export function ArticleForm({
     <form action={formAction} className="grid gap-6">
       <input type="hidden" name="id" value={article.id ?? ""} />
 
-      {state.error ? (
-        <p role="alert" className="border-l-2 border-brand bg-surface p-3 text-sm text-brand">
-          {state.error}
-        </p>
-      ) : null}
+      <FormError message={state.error} />
 
       <FormSection title="Conteúdo">
         <Field label="Título" htmlFor="title" required>
@@ -77,7 +74,7 @@ export function ArticleForm({
         <ImageField
           name="coverImage"
           label="Imagem de capa"
-          hint="JPG ou WEBP, 1600×900px (proporção 16:9), até 5MB. É a imagem do topo da matéria e do compartilhamento em redes sociais."
+          hint="JPG, PNG, GIF ou WEBP, 1600×900px (proporção 16:9), até 5MB. É a imagem do topo da matéria e do compartilhamento em redes sociais."
           defaultValue={article.coverImage}
         />
         <Field
@@ -91,13 +88,13 @@ export function ArticleForm({
         <GalleryField
           name="gallery"
           label="Galeria da matéria (opcional)"
-          hint="JPG ou WEBP, 1200×900px, até 5MB por foto. Você pode enviar várias de uma vez e reordenar."
+          hint="JPG, PNG, GIF ou WEBP, 1200×900px, até 5MB por foto. Você pode enviar várias de uma vez e reordenar."
           defaultValue={article.gallery ?? []}
         />
       </FormSection>
 
       <FormSection title="Classificação e publicação">
-        <fieldset>
+        <fieldset className="md:col-span-2">
           <legend className="mb-2 text-sm font-semibold">Categorias</legend>
           {categories.length ? (
             <div className="flex flex-wrap gap-x-6 gap-y-2">
@@ -117,7 +114,7 @@ export function ArticleForm({
           ) : (
             <p className="text-sm text-muted">
               Nenhuma categoria cadastrada.{" "}
-              <Link href="/admin/categorias" className="text-brand underline">
+              <Link href="/admin/categorias" className="text-link underline">
                 Criar categorias
               </Link>
             </p>
@@ -144,7 +141,12 @@ export function ArticleForm({
           </Select>
         </Field>
 
-        <Checkbox name="featured" label="Destacar no carrossel da home" defaultChecked={article.featured} />
+        <Checkbox
+          name="featured"
+          label="Destaque"
+          hint="Entra no fim da fila de destaques da seção (até 6). A ordem se ajusta na aba Destaques da lista."
+          defaultChecked={article.featured}
+        />
       </FormSection>
 
       <FormSection title="SEO" description="Como a matéria aparece no Google e nas redes sociais.">
@@ -156,6 +158,7 @@ export function ArticleForm({
           <TextInput id="metaTitle" name="metaTitle" defaultValue={article.metaTitle ?? ""} />
         </Field>
         <Field
+          wide
           label="Descrição para buscadores"
           htmlFor="metaDescription"
           hint="Até 160 caracteres. Em branco, usa a linha de apoio."
@@ -169,12 +172,9 @@ export function ArticleForm({
         </Field>
       </FormSection>
 
-      <div className="flex items-center gap-4">
-        <SubmitButton>Salvar matéria</SubmitButton>
-        <Link href="/admin/materias" className="text-sm text-muted hover:text-ink">
-          Cancelar
-        </Link>
-      </div>
+      <FormActions cancelHref="/admin/materias">
+        {article.id ? "Atualizar matéria" : "Criar matéria"}
+      </FormActions>
     </form>
   );
 }

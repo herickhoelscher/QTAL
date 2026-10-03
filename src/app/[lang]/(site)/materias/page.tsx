@@ -25,7 +25,7 @@ export default async function ArticlesPage() {
   const [articles, categories, { t }] = await Promise.all([
     prisma.article.findMany({
       where: { status: "PUBLISHED" },
-      orderBy: { publishedAt: "desc" },
+      orderBy: [{ featuredRank: { sort: "asc", nulls: "last" } }, { publishedAt: "desc" }],
       include: {
         categories: true,
         issueItems: {

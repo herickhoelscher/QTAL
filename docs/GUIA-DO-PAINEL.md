@@ -6,21 +6,35 @@ nada do que está aqui.
 ## Entrar
 
 Acesse `seusite.com.br/admin`, informe e-mail e senha. A sessão dura 8 horas; depois disso o
-painel pede a senha de novo.
+painel pede a senha de novo. Marque **Lembrar de mim** para continuar conectado por 30 dias
+(só em computador de uso pessoal).
 
-No topo de todas as telas ficam a sua logo e a marca da B7, o link **Ver o site** e o
-botão **Sair**.
+A barra escura do topo traz a marca da B7, o seu nome e o botão **Sair**. O menu fica à
+esquerda, com a sua logo no alto, o link **Ver o site** e, no pé, a chave **Tema escuro**. No
+celular, o menu abre pelo botão ☰.
+
+## Listas
+
+Toda seção abre com a lista do que já foi cadastrado:
+
+- **Buscar por nome** encontra pelo título.
+- Clique no título de uma coluna com ⇅ (como **Atualizado**) para ordenar por ela; clique de
+  novo para inverter.
+- Cada linha tem **Ver** (ficha completa, com o botão para abrir no site), **Editar** e
+  **Excluir**. Excluir sempre pede confirmação.
+- Mais de 20 itens viram páginas numeradas no rodapé da lista.
 
 ## O que existe em cada seção
 
 | Seção | Para que serve |
 | --- | --- |
-| Dashboard | Quanto cada matéria foi vista, com filtros por status e por região |
+| Painel | Totais do site, atalhos para criar conteúdo e quanto cada matéria foi vista |
+| Carrossel | Os slides do topo da página inicial, de qualquer seção |
 | Matérias | Reportagens e colunas |
 | Eventos | Cobertura fotográfica e agenda |
 | Imóveis | Vitrine de casas, apartamentos, terrenos e salas comerciais |
 | Vídeos | Links de vídeos do YouTube e do Instagram |
-| Edições (Modo Revista) | Sequências de matérias folheadas em tela cheia |
+| Edições | A revista folheável e o Modo Revista |
 | Categorias | Os assuntos que organizam e filtram o conteúdo |
 | Configurações | Chaves de API, CUB, WhatsApp, redes sociais e Google Tag Manager |
 | Usuários | Quem pode entrar no painel |
@@ -80,11 +94,43 @@ preço.
 
 O botão de contato do imóvel abre o WhatsApp já com o nome do imóvel na mensagem.
 
-## Modo Revista
+## Destaques
 
-Uma **edição** é uma sequência de matérias lida em tela cheia, como quem folheia uma revista.
+Matérias, eventos, imóveis, vídeos e edições têm até **6 destaques** cada. Eles abrem o bloco
+da seção na página inicial e aparecem primeiro na página da seção no site, na ordem que você
+escolher.
 
-Em **Edições (Modo Revista) → Nova edição**, dê um nome à edição e escolha as matérias na
+- Na lista da seção, aba **Todos**, clique na ☆ da linha para destacar. A estrela fica
+  amarela com o número da posição. Clique de novo para tirar.
+- A aba **Destaques** mostra a fila em ordem: use ↑ e ↓ para reordenar e **Remover** para
+  abrir lugar.
+- No formulário, a caixa **Destaque** faz o mesmo e coloca o item no fim da fila.
+- Com os 6 lugares ocupados, o painel avisa: tire um antes de marcar outro.
+
+## Carrossel da página inicial
+
+Em **Carrossel**, a lista mostra os slides do topo da página inicial, na ordem em que passam
+(até 8). Busque pelo título em **Adicionar ao carrossel** para incluir matéria, evento, imóvel,
+vídeo ou edição. Use ↑ e ↓ para reordenar. Conteúdo em rascunho fica na lista com o aviso
+"não aparece no site". Com o carrossel vazio, a página inicial mostra as 3 matérias mais
+recentes.
+
+No site, o visitante troca de slide pelas setas ‹ › ou pelo teclado. A troca automática
+espera enquanto o mouse está em cima.
+
+## Edições: revista folheável e Modo Revista
+
+Uma **edição** pode ter as duas coisas:
+
+- **Páginas da revista** — as imagens de cada página, em ordem (JPG ou WEBP, 1200×1600px).
+  No site, clicar na capa abre a revista para folhear: duas páginas no computador, uma no
+  celular, com miniaturas, zoom, tela cheia e compartilhar.
+- **Sequência de leitura** — matérias do site lidas em tela cheia (Modo Revista).
+
+Sem páginas, a capa leva direto ao Modo Revista. As edições publicadas aparecem na faixa
+vermelha **Edições anteriores** da página inicial e na página **Edições** do menu.
+
+Em **Edições → Nova Edição**, dê um nome à edição e escolha as matérias na
 coluna da esquerda. A ordem da coluna da direita é a ordem em que as pessoas vão ler — use as
 setas ↑ e ↓ para reorganizar.
 
@@ -141,8 +187,11 @@ O número vai com código do país e DDD, só números: `5545999998888`.
 
 Há dois papéis:
 
-- **Editor de conteúdo** — publica matérias, eventos, imóveis, vídeos e edições.
-- **Administrador geral** — faz tudo isso e também altera configurações e usuários.
+- **Editor** — publica matérias, eventos, imóveis, vídeos e edições.
+- **Administrador** — faz tudo isso e também altera configurações e usuários.
+
+Para cadastrar, use **+ Novo Usuário**. A senha precisa ser digitada duas vezes (o olho ao
+lado do campo mostra o que foi digitado). Ao editar, deixe a senha em branco para mantê-la.
 
 Quando alguém sai da equipe, desmarque **Acesso liberado** em vez de excluir: o conteúdo
 publicado por essa pessoa continua com a autoria correta.
@@ -158,4 +207,4 @@ página. As listagens se atualizam em até cinco minutos.
 **Posso apagar uma categoria em uso?** Pode. Os conteúdos continuam publicados, apenas sem
 aquela categoria.
 
-**Esqueci a senha.** Um administrador geral cadastra uma nova em **Usuários → Editar**.
+**Esqueci a senha.** Um administrador cadastra uma nova em **Usuários → Editar**.

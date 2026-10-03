@@ -1,4 +1,4 @@
-// Portal Institucional Multiconteúdo — BSEC
+// Portal Institucional Multiconteúdo — B7
 // Modelo de dados conforme seção 07 da especificação técnica.
 
 generator client {
@@ -86,6 +86,8 @@ model Article {
   metaDescription String?
   viewCount       Int           @default(0)
   featured        Boolean       @default(false)
+  /// Posicao nos destaques da secao (1 a 6). Null: fora dos destaques.
+  featuredRank    Int?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -96,23 +98,29 @@ model Article {
   gallery    MediaAsset[]
   videos     Video[]
   issueItems IssueItem[]
+  heroSlides HeroSlide[]
 
   @@index([status, publishedAt])
 }
 
 /// Uma "edição" é a sequência de matérias consumida no Modo Revista.
 model Issue {
-  id          String        @id @default(cuid())
-  title       String
-  slug        String        @unique
-  description String?
-  coverImage  String?
-  publishedAt DateTime?
-  status      ContentStatus @default(DRAFT)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id           String        @id @default(cuid())
+  title        String
+  slug         String        @unique
+  description  String?
+  coverImage   String?
+  /// Posicao nos destaques da secao (1 a 6). Null: fora dos destaques.
+  featuredRank Int?
+  publishedAt  DateTime?
+  status       ContentStatus @default(DRAFT)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
-  items IssueItem[]
+  items      IssueItem[]
+  /// Paginas da revista folheavel, em ordem (position).
+  pages      MediaAsset[]
+  heroSlides HeroSlide[]
 }
 
 model IssueItem {
@@ -129,22 +137,25 @@ model IssueItem {
 }
 
 model Event {
-  id          String        @id @default(cuid())
-  title       String
-  slug        String        @unique
-  description String?       @db.Text
-  date        DateTime
-  location    String?
-  region      String?
-  coverImage  String?
-  coverAlt    String?
-  status      ContentStatus @default(DRAFT)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id           String        @id @default(cuid())
+  title        String
+  slug         String        @unique
+  description  String?       @db.Text
+  date         DateTime
+  location     String?
+  region       String?
+  coverImage   String?
+  coverAlt     String?
+  /// Posicao nos destaques da secao (1 a 6). Null: fora dos destaques.
+  featuredRank Int?
+  status       ContentStatus @default(DRAFT)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   categories Category[]   @relation("EventCategories")
   media      MediaAsset[]
   videos     Video[]
+  heroSlides HeroSlide[]
 
   @@index([status, date])
 }
@@ -169,6 +180,8 @@ model Property {
   mapEmbedUrl    String?
   tourUrl        String?
   featured       Boolean       @default(false)
+  /// Posicao nos destaques da secao (1 a 6). Null: fora dos destaques.
+  featuredRank   Int?
   status         ContentStatus @default(DRAFT)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -176,6 +189,7 @@ model Property {
   categories Category[]   @relation("PropertyCategories")
   gallery    MediaAsset[]
   videos     Video[]
+  heroSlides HeroSlide[]
 
   @@index([status, city, type])
 }
@@ -195,6 +209,8 @@ model Video {
   /// entra com tarja desfocada. Detectado pelo link no cadastro, editavel.
   vertical        Boolean       @default(false)
   featured        Boolean       @default(false)
+  /// Posicao nos destaques da secao (1 a 6). Null: fora dos destaques.
+  featuredRank    Int?
   publishedAt     DateTime?
   status          ContentStatus @default(DRAFT)
   createdAt       DateTime      @default(now())
@@ -212,7 +228,8 @@ model Video {
   propertyId String?
   property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
 
-  categories Category[] @relation("VideoCategories")
+  categories Category[]  @relation("VideoCategories")
+  heroSlides HeroSlide[]
 
   @@index([status, publishedAt])
 }
@@ -233,12 +250,35 @@ model MediaAsset {
   article    Article?  @relation(fields: [articleId], references: [id], onDelete: Cascade)
   propertyId String?
   property   Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  issueId    String?
+  issue      Issue?    @relation(fields: [issueId], references: [id], onDelete: Cascade)
 
   /// Foto de destaque: abre grande no topo da galeria. Uma por album.
   featured Boolean @default(false)
 
   /// Agrupamento opcional de fotos em blocos/álbuns dentro de um evento.
   album String?
+}
+
+/// Slide do carrossel do topo da home. Aponta para um conteudo de qualquer
+/// tipo (exatamente uma das chaves preenchida); some junto com ele.
+model HeroSlide {
+  id        String   @id @default(cuid())
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  articleId  String?
+  article    Article?  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  eventId    String?
+  event      Event?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  videoId    String?
+  video      Video?    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  issueId    String?
+  issue      Issue?    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@index([position])
 }
 
 /// Linha única de configuração operada pelo cliente no painel.

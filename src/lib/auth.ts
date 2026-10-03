@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 
 export const SESSION_COOKIE = "portal_session";
 const MAX_AGE = 60 * 60 * 8; // 8 horas
+/** "Lembrar de mim" marcado no login. */
+const REMEMBER_MAX_AGE = 60 * 60 * 24 * 30; // 30 dias
 
 export type SessionUser = {
   id: string;
@@ -20,11 +22,15 @@ function secret(): Uint8Array {
   return new TextEncoder().encode(value);
 }
 
-export async function createSession(user: SessionUser): Promise<void> {
+export async function createSession(
+  user: SessionUser,
+  { remember = false }: { remember?: boolean } = {},
+): Promise<void> {
+  const maxAge = remember ? REMEMBER_MAX_AGE : MAX_AGE;
   const token = await new SignJWT({ ...user })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime(`${MAX_AGE}s`)
+    .setExpirationTime(`${maxAge}s`)
     .sign(secret());
 
   const store = await cookies();
@@ -33,7 +39,7 @@ export async function createSession(user: SessionUser): Promise<void> {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: MAX_AGE,
+    maxAge,
   });
 }
 

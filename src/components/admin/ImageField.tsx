@@ -45,10 +45,10 @@ export function ImageField({
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-sm font-semibold text-ink">
+    <div className="flex flex-col gap-1.5 md:col-span-2">
+      <span className="text-[13px] font-semibold text-ink">
         {label}
-        {required ? <span className="text-brand"> *</span> : null}
+        {required ? <span className="text-danger"> *</span> : null}
       </span>
 
       <p className="text-xs text-muted">{hint}</p>
@@ -59,7 +59,7 @@ export function ImageField({
         <input
           ref={inputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/avif"
+          accept="image/jpeg,image/png,image/gif,image/webp,image/avif"
           onChange={(event) => {
             const file = event.target.files?.[0];
             if (file) void upload(file);
@@ -74,14 +74,14 @@ export function ImageField({
               setUrl("");
               if (inputRef.current) inputRef.current.value = "";
             }}
-            className="text-xs text-brand underline"
+            className="text-xs text-danger underline"
           >
             Remover imagem
           </button>
         ) : null}
       </div>
 
-      {error ? <p className="text-xs text-brand">{error}</p> : null}
+      {error ? <p className="text-xs text-danger">{error}</p> : null}
 
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element

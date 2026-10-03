@@ -1,68 +1,150 @@
-import Link from "next/link";
+import type { Prisma } from "@prisma/client";
 import { deleteArticle } from "@/app/admin/actions/content";
 import { DeleteButton } from "@/components/admin/DeleteButton";
+import {
+  FeaturedNotice,
+  FeaturedQueue,
+  FeaturedStar,
+  FeaturedTabs,
+} from "@/components/admin/featured";
 import {
   AdminEmpty,
   AdminHeading,
   AdminTable,
+  Cell,
+  Pagination,
+  Row,
+  RowActions,
   SavedNotice,
+  SearchBar,
+  SortHeader,
   StatusPill,
 } from "@/components/admin/ui";
+import { listHref, parseListParams, skipOf, type RawListParams } from "@/lib/admin-list";
+import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { formatDateShort } from "@/lib/format";
+
+const BASE = "/admin/materias";
 
 export default async function AdminArticlesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ salvo?: string }>;
+  searchParams: Promise<RawListParams & { salvo?: string; aba?: string; aviso?: string }>;
 }) {
-  const { salvo } = await searchParams;
-
-  const articles = await prisma.article.findMany({
-    orderBy: { updatedAt: "desc" },
-    include: { categories: true, author: { select: { name: true } } },
+  const raw = await searchParams;
+  const params = parseListParams(raw, {
+    sortable: ["updatedAt", "viewCount"],
+    defaultSort: "updatedAt",
   });
+  const tab = raw.aba === "destaques" ? "destaques" : "todos";
+
+  const where: Prisma.ArticleWhereInput = params.q
+    ? { title: { contains: params.q, mode: "insensitive" } }
+    : {};
+
+  const [articles, total, queue] = await Promise.all([
+    prisma.article.findMany({
+      where,
+      orderBy: { [params.sort]: params.dir },
+      skip: skipOf(params),
+      take: params.take,
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        featuredRank: true,
+        viewCount: true,
+        updatedAt: true,
+      },
+    }),
+    prisma.article.count({ where }),
+    prisma.article.findMany({
+      where: { featuredRank: { not: null } },
+      orderBy: { featuredRank: "asc" },
+      select: { id: true, title: true, status: true, featuredRank: true },
+    }),
+  ]);
 
   return (
     <>
       <AdminHeading
         title="Matérias"
-        description="Reportagens e colunas publicadas no site."
-        action={{ href: "/admin/materias/novo", label: "Nova matéria" }}
+        description="Gerencie o catálogo de matérias."
+        action={{ href: BASE + "/novo", label: "Nova Matéria" }}
       />
-      <SavedNotice show={salvo === "1"} />
+      <SavedNotice show={raw.salvo === "1"} />
+      <FeaturedTabs base={BASE} active={tab} count={queue.length} />
+      <FeaturedNotice aviso={raw.aviso} />
 
-      {articles.length ? (
-        <AdminTable headers={["Título", "Status", "Categorias", "Visualizações", "Atualizada", ""]}>
-          {articles.map((article) => (
-            <tr key={article.id} className="border-b border-line last:border-0">
-              <td className="px-4 py-3">
-                <p className="font-semibold">{article.title}</p>
-                <p className="text-xs text-muted">
-                  {article.author ? "por " + article.author.name : "sem autor"}
-                </p>
-              </td>
-              <td className="px-4 py-3">
-                <StatusPill status={article.status} />
-              </td>
-              <td className="px-4 py-3 text-muted">
-                {article.categories.map((category) => category.name).join(", ") || "—"}
-              </td>
-              <td className="px-4 py-3 tabular-nums">{article.viewCount}</td>
-              <td className="px-4 py-3 text-muted">{formatDateShort(article.updatedAt)}</td>
-              <td className="px-4 py-3">
-                <div className="flex gap-4">
-                  <Link href={"/admin/materias/" + article.id} className="text-brand hover:underline">
-                    Editar
-                  </Link>
-                  <DeleteButton id={article.id} action={deleteArticle} />
-                </div>
-              </td>
-            </tr>
-          ))}
-        </AdminTable>
+      {tab === "destaques" ? (
+        <FeaturedQueue
+          model="article"
+          base={BASE}
+          items={queue.map((item) => ({ ...item, rank: item.featuredRank }))}
+        />
       ) : (
-        <AdminEmpty>Nenhuma matéria cadastrada ainda.</AdminEmpty>
+        <>
+          <SearchBar params={params} />
+
+          {articles.length ? (
+            <>
+              <AdminTable
+                headers={[
+                  "Registro",
+                  "Status",
+                  <SortHeader
+                    key="v"
+                    label="Visualizações"
+                    field="viewCount"
+                    base={BASE}
+                    params={params}
+                  />,
+                  <SortHeader
+                    key="a"
+                    label="Atualizado"
+                    field="updatedAt"
+                    base={BASE}
+                    params={params}
+                  />,
+                  "Destaque",
+                  "",
+                ]}
+              >
+                {articles.map((article) => (
+                  <Row key={article.id}>
+                    <Cell strong>{article.title}</Cell>
+                    <Cell>
+                      <StatusPill status={article.status} />
+                    </Cell>
+                    <Cell>{article.viewCount}</Cell>
+                    <Cell>{formatDateTime(article.updatedAt)}</Cell>
+                    <Cell>
+                      <FeaturedStar
+                        model="article"
+                        id={article.id}
+                        rank={article.featuredRank}
+                        back={listHref(BASE, params)}
+                      />
+                    </Cell>
+                    <RowActions
+                      viewHref={`${BASE}/${article.id}`}
+                      editHref={`${BASE}/${article.id}/editar`}
+                    >
+                      <DeleteButton id={article.id} action={deleteArticle} />
+                    </RowActions>
+                  </Row>
+                ))}
+              </AdminTable>
+              <Pagination base={BASE} params={params} total={total} />
+            </>
+          ) : (
+            <AdminEmpty>
+              {params.q
+                ? "Nenhuma matéria encontrada para essa busca."
+                : "Nenhuma matéria cadastrada ainda."}
+            </AdminEmpty>
+          )}
+        </>
       )}
     </>
   );

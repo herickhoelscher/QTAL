@@ -14,10 +14,12 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   // As editorias sairam do menu: agora elas vivem como abas dentro de /materias,
   // onde o leitor filtra sem sair da pagina.
   const nav: NavItem[] = [
+    { label: t.nav.home, href: "/" },
     { label: t.nav.articles, href: "/materias" },
     { label: t.nav.events, href: "/eventos" },
     { label: t.nav.properties, href: "/imoveis" },
     { label: t.nav.videos, href: "/videos" },
+    { label: t.nav.issues, href: "/edicoes" },
     { label: t.nav.subscribe, href: "/assine" },
     { label: t.nav.about, href: "/sobre" },
   ];
@@ -50,7 +52,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <main className="flex-1">{children}</main>
       <SiteFooter
         siteName={settings.siteName}
-        nav={nav.slice(0, 4)}
+        nav={nav.slice(1, 5)}
         contact={{
           phone: settings.contactPhone,
           email: settings.contactEmail,

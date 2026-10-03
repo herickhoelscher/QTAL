@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { refreshCubNow, saveSettings } from "@/app/admin/actions/settings";
 import { ImageField } from "@/components/admin/ImageField";
+import { SECONDARY_BUTTON } from "@/components/admin/styles";
 import {
   Checkbox,
   Field,
@@ -39,19 +40,31 @@ export type SettingsFormData = {
   hasDeeplKey: boolean;
 };
 
+/** Todo cartao tem o proprio Salvar, mas todos enviam o formulario inteiro. */
+function SaveRow() {
+  return (
+    <div className="flex justify-end md:col-span-2">
+      <SubmitButton>Salvar</SubmitButton>
+    </div>
+  );
+}
+
 export function SettingsForm({ settings }: { settings: SettingsFormData }) {
   const [state, formAction] = useActionState(saveSettings, {});
 
   return (
     <form action={formAction} className="grid gap-6">
-      {state.error ? (
-        <p role="alert" className="border-l-2 border-brand bg-surface p-3 text-sm text-brand">
-          {state.error}
-        </p>
-      ) : null}
-      {state.success ? (
-        <p className="border-l-2 border-emerald-600 bg-surface p-3 text-sm text-emerald-800">
-          {state.success}
+      {state.error || state.success ? (
+        <p
+          role={state.error ? "alert" : "status"}
+          className={
+            "fixed right-6 bottom-6 z-50 max-w-sm rounded-xl border px-4 py-3 text-sm shadow-lg " +
+            (state.error
+              ? "border-danger/30 bg-surface text-danger"
+              : "border-emerald-600/30 bg-surface text-ink")
+          }
+        >
+          {state.error ?? state.success}
         </p>
       ) : null}
 
@@ -60,6 +73,7 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
           <TextInput id="siteName" name="siteName" defaultValue={settings.siteName} required />
         </Field>
         <Field
+          wide
           label="Descrição"
           htmlFor="siteDescription"
           hint="Usada pelos buscadores quando a página não tem descrição própria."
@@ -77,13 +91,14 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
           hint="PNG ou SVG com fundo transparente, altura mínima de 80px, até 5MB. Aparece no topo do site e no painel."
           defaultValue={settings.clientLogoUrl}
         />
+        <SaveRow />
       </FormSection>
 
       <FormSection
         title="Barra de dados automáticos"
         description="Alimenta a faixa de clima, dólar e CUB exibida no topo de todas as páginas."
       >
-        <p className="border-l-2 border-line bg-surface-alt p-3 text-sm text-muted">
+        <p className="rounded-xl bg-surface-alt p-3 text-sm text-muted md:col-span-2">
           O clima vem do Open-Meteo e a cotação do dólar da AwesomeAPI: as duas são
           gratuitas e <strong>não exigem chave nem cadastro</strong>. Não há nada para
           renovar aqui.
@@ -97,7 +112,7 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
           <TextInput id="weatherCity" name="weatherCity" defaultValue={settings.weatherCity} />
         </Field>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 md:col-span-2">
           <Field
             label="Latitude (opcional)"
             htmlFor="weatherLat"
@@ -175,7 +190,7 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
           defaultChecked={settings.cubAutoUpdate}
         />
 
-        <div className="flex flex-wrap items-center gap-4 border-l-2 border-line bg-surface-alt p-3">
+        <div className="flex flex-wrap items-center gap-4 rounded-xl bg-surface-alt p-3 md:col-span-2">
           <div className="text-xs text-muted">
             {settings.cubUpdatedAt ? (
               <>
@@ -193,11 +208,12 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
           <button
             type="submit"
             formAction={refreshCubNow}
-            className="eyebrow ml-auto border border-line bg-surface px-4 py-2 hover:border-brand hover:text-brand"
+            className={SECONDARY_BUTTON + " ml-auto py-2"}
           >
             Buscar CUB agora
           </button>
         </div>
+        <SaveRow />
       </FormSection>
 
       <FormSection title="Assinatura e contato">
@@ -217,6 +233,7 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
         </Field>
 
         <Field
+          wide
           label="Mensagem pré-preenchida"
           htmlFor="whatsappMessage"
           hint="É o texto que já vem escrito quando a pessoa clica em Assine agora."
@@ -229,7 +246,7 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
           />
         </Field>
 
-        <div className="grid gap-5 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-3 md:col-span-2">
           <Field label="Instagram" htmlFor="instagramUrl">
             <TextInput id="instagramUrl" name="instagramUrl" defaultValue={settings.instagramUrl ?? ""} />
           </Field>
@@ -241,7 +258,7 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
           </Field>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 md:col-span-2">
           <Field label="Telefone" htmlFor="contactPhone">
             <TextInput id="contactPhone" name="contactPhone" defaultValue={settings.contactPhone ?? ""} />
           </Field>
@@ -262,6 +279,7 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
             defaultValue={settings.contactAddress ?? ""}
           />
         </Field>
+        <SaveRow />
       </FormSection>
 
       <FormSection
@@ -288,6 +306,7 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
         {settings.hasDeeplKey ? (
           <Checkbox name="deeplApiKeyRemove" label="Remover a chave cadastrada" />
         ) : null}
+        <SaveRow />
       </FormSection>
 
       <FormSection
@@ -306,11 +325,8 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
             placeholder="GTM-XXXXXXX"
           />
         </Field>
+        <SaveRow />
       </FormSection>
-
-      <div>
-        <SubmitButton>Salvar configurações</SubmitButton>
-      </div>
     </form>
   );
 }

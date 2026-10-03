@@ -1,14 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState, useState } from "react";
 import { saveIssue } from "@/app/admin/actions/content";
+import { GalleryField, type GalleryItem } from "@/components/admin/GalleryField";
 import { ImageField } from "@/components/admin/ImageField";
 import {
+  Checkbox,
   Field,
+  FormActions,
+  FormError,
   FormSection,
   Select,
-  SubmitButton,
   TextArea,
   TextInput,
 } from "@/components/admin/form";
@@ -20,7 +22,9 @@ export type IssueFormData = {
   description?: string | null;
   coverImage?: string | null;
   status?: string;
+  featured?: boolean;
   articleIds?: string[];
+  pages?: GalleryItem[];
 };
 
 type ArticleOption = { id: string; title: string };
@@ -59,11 +63,7 @@ export function IssueForm({
         <input key={articleId} type="hidden" name="articleIds" value={articleId} />
       ))}
 
-      {state.error ? (
-        <p role="alert" className="border-l-2 border-brand bg-surface p-3 text-sm text-brand">
-          {state.error}
-        </p>
-      ) : null}
+      <FormError message={state.error} />
 
       <FormSection title="Edição">
         <Field label="Título" htmlFor="title" required>
@@ -72,7 +72,7 @@ export function IssueForm({
         <Field label="Endereço da página (slug)" htmlFor="slug" hint="Em branco, gera pelo título.">
           <TextInput id="slug" name="slug" defaultValue={issue.slug} />
         </Field>
-        <Field label="Descrição" htmlFor="description">
+        <Field wide label="Descrição" htmlFor="description">
           <TextArea
             id="description"
             name="description"
@@ -83,7 +83,7 @@ export function IssueForm({
         <ImageField
           name="coverImage"
           label="Capa da edição"
-          hint="JPG ou WEBP, 1200×1600px (retrato, 3:4), até 5MB. É a capa exibida na chamada do Modo Revista."
+          hint="JPG, PNG, GIF ou WEBP, 1200×1600px (retrato, 3:4), até 5MB. Aparece na faixa Edições anteriores e na página Edições."
           defaultValue={issue.coverImage}
         />
         <Field label="Status" htmlFor="status">
@@ -92,6 +92,26 @@ export function IssueForm({
             <option value="PUBLISHED">Publicado</option>
           </Select>
         </Field>
+        <Checkbox
+          name="featured"
+          label="Destaque"
+          hint="Entra no fim da fila de destaques da seção (até 6). A ordem se ajusta na aba Destaques da lista."
+          defaultChecked={issue.featured}
+        />
+      </FormSection>
+
+      <FormSection
+        title="Páginas da revista"
+        description="As páginas que o leitor folheia, na ordem. Sem páginas, a capa leva direto ao Modo Revista."
+      >
+        <GalleryField
+          name="pages"
+          label="Páginas"
+          hint="JPG, PNG, GIF ou WEBP, 1200×1600px (retrato, 3:4), até 5MB por página. Envie todas de uma vez, na ordem; use mover para ajustar."
+          defaultValue={issue.pages ?? []}
+          withHighlight={false}
+          numbered
+        />
       </FormSection>
 
       <FormSection
@@ -142,7 +162,7 @@ export function IssueForm({
                     <button
                       type="button"
                       onClick={() => setSelected((c) => c.filter((item) => item !== articleId))}
-                      className="text-brand"
+                      className="text-danger"
                     >
                       remover
                     </button>
@@ -158,12 +178,9 @@ export function IssueForm({
         </div>
       </FormSection>
 
-      <div className="flex items-center gap-4">
-        <SubmitButton>Salvar edição</SubmitButton>
-        <Link href="/admin/edicoes" className="text-sm text-muted hover:text-ink">
-          Cancelar
-        </Link>
-      </div>
+      <FormActions cancelHref="/admin/edicoes">
+        {issue.id ? "Atualizar edição" : "Criar edição"}
+      </FormActions>
     </form>
   );
 }

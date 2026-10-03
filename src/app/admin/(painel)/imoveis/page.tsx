@@ -1,61 +1,146 @@
-import Link from "next/link";
+import type { Prisma } from "@prisma/client";
 import { deleteProperty } from "@/app/admin/actions/content";
 import { DeleteButton } from "@/components/admin/DeleteButton";
+import {
+  FeaturedNotice,
+  FeaturedQueue,
+  FeaturedStar,
+  FeaturedTabs,
+} from "@/components/admin/featured";
 import {
   AdminEmpty,
   AdminHeading,
   AdminTable,
+  Cell,
+  Pagination,
+  Row,
+  RowActions,
   SavedNotice,
+  SearchBar,
+  SortHeader,
   StatusPill,
 } from "@/components/admin/ui";
+import { listHref, parseListParams, skipOf, type RawListParams } from "@/lib/admin-list";
+import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { formatCurrency } from "@/lib/format";
+
+const BASE = "/admin/imoveis";
 
 export default async function AdminPropertiesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ salvo?: string }>;
+  searchParams: Promise<RawListParams & { salvo?: string; aba?: string; aviso?: string }>;
 }) {
-  const { salvo } = await searchParams;
-  const properties = await prisma.property.findMany({ orderBy: { updatedAt: "desc" } });
+  const raw = await searchParams;
+  const params = parseListParams(raw, { sortable: ["updatedAt"], defaultSort: "updatedAt" });
+  const tab = raw.aba === "destaques" ? "destaques" : "todos";
+
+  const where: Prisma.PropertyWhereInput = params.q
+    ? {
+        OR: [
+          { title: { contains: params.q, mode: "insensitive" } },
+          { city: { contains: params.q, mode: "insensitive" } },
+        ],
+      }
+    : {};
+
+  const [properties, total, queue] = await Promise.all([
+    prisma.property.findMany({
+      where,
+      orderBy: { [params.sort]: params.dir },
+      skip: skipOf(params),
+      take: params.take,
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        featuredRank: true,
+        city: true,
+        updatedAt: true,
+      },
+    }),
+    prisma.property.count({ where }),
+    prisma.property.findMany({
+      where: { featuredRank: { not: null } },
+      orderBy: { featuredRank: "asc" },
+      select: { id: true, title: true, status: true, featuredRank: true },
+    }),
+  ]);
 
   return (
     <>
       <AdminHeading
         title="Imóveis"
-        description="Vitrine de casas, apartamentos, terrenos e salas comerciais."
-        action={{ href: "/admin/imoveis/novo", label: "Novo imóvel" }}
+        description="Gerencie o catálogo de imóveis."
+        action={{ href: BASE + "/novo", label: "Novo Imóvel" }}
       />
-      <SavedNotice show={salvo === "1"} />
+      <SavedNotice show={raw.salvo === "1"} />
+      <FeaturedTabs base={BASE} active={tab} count={queue.length} />
+      <FeaturedNotice aviso={raw.aviso} />
 
-      {properties.length ? (
-        <AdminTable headers={["Imóvel", "Status", "Cidade", "Tipo", "Valor", ""]}>
-          {properties.map((property) => (
-            <tr key={property.id} className="border-b border-line last:border-0">
-              <td className="px-4 py-3 font-semibold">{property.title}</td>
-              <td className="px-4 py-3">
-                <StatusPill status={property.status} />
-              </td>
-              <td className="px-4 py-3 text-muted">{property.city}</td>
-              <td className="px-4 py-3 text-muted">{property.type}</td>
-              <td className="px-4 py-3">
-                {property.priceOnRequest
-                  ? "Sob consulta"
-                  : formatCurrency(property.price?.toString())}
-              </td>
-              <td className="px-4 py-3">
-                <div className="flex gap-4">
-                  <Link href={"/admin/imoveis/" + property.id} className="text-brand hover:underline">
-                    Editar
-                  </Link>
-                  <DeleteButton id={property.id} action={deleteProperty} />
-                </div>
-              </td>
-            </tr>
-          ))}
-        </AdminTable>
+      {tab === "destaques" ? (
+        <FeaturedQueue
+          model="property"
+          base={BASE}
+          items={queue.map((item) => ({ ...item, rank: item.featuredRank }))}
+        />
       ) : (
-        <AdminEmpty>Nenhum imóvel cadastrado ainda.</AdminEmpty>
+        <>
+          <SearchBar params={params} />
+
+          {properties.length ? (
+            <>
+              <AdminTable
+                headers={[
+                  "Registro",
+                  "Status",
+                  "Cidade",
+                  <SortHeader
+                    key="a"
+                    label="Atualizado"
+                    field="updatedAt"
+                    base={BASE}
+                    params={params}
+                  />,
+                  "Destaque",
+                  "",
+                ]}
+              >
+                {properties.map((property) => (
+                  <Row key={property.id}>
+                    <Cell strong>{property.title}</Cell>
+                    <Cell>
+                      <StatusPill status={property.status} />
+                    </Cell>
+                    <Cell>{property.city}</Cell>
+                    <Cell>{formatDateTime(property.updatedAt)}</Cell>
+                    <Cell>
+                      <FeaturedStar
+                        model="property"
+                        id={property.id}
+                        rank={property.featuredRank}
+                        back={listHref(BASE, params)}
+                      />
+                    </Cell>
+                    <RowActions
+                      viewHref={`${BASE}/${property.id}`}
+                      editHref={`${BASE}/${property.id}/editar`}
+                    >
+                      <DeleteButton id={property.id} action={deleteProperty} />
+                    </RowActions>
+                  </Row>
+                ))}
+              </AdminTable>
+              <Pagination base={BASE} params={params} total={total} />
+            </>
+          ) : (
+            <AdminEmpty>
+              {params.q
+                ? "Nenhum imóvel encontrado para essa busca."
+                : "Nenhum imóvel cadastrado ainda."}
+            </AdminEmpty>
+          )}
+        </>
       )}
     </>
   );

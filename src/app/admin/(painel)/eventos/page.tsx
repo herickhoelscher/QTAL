@@ -1,66 +1,141 @@
-import Link from "next/link";
+import type { Prisma } from "@prisma/client";
 import { deleteEvent } from "@/app/admin/actions/content";
 import { DeleteButton } from "@/components/admin/DeleteButton";
+import {
+  FeaturedNotice,
+  FeaturedQueue,
+  FeaturedStar,
+  FeaturedTabs,
+} from "@/components/admin/featured";
 import {
   AdminEmpty,
   AdminHeading,
   AdminTable,
+  Cell,
+  Pagination,
+  Row,
+  RowActions,
   SavedNotice,
+  SearchBar,
+  SortHeader,
   StatusPill,
 } from "@/components/admin/ui";
+import { listHref, parseListParams, skipOf, type RawListParams } from "@/lib/admin-list";
+import { formatDateShort, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { formatDateShort } from "@/lib/format";
+
+const BASE = "/admin/eventos";
 
 export default async function AdminEventsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ salvo?: string }>;
+  searchParams: Promise<RawListParams & { salvo?: string; aba?: string; aviso?: string }>;
 }) {
-  const { salvo } = await searchParams;
+  const raw = await searchParams;
+  const params = parseListParams(raw, { sortable: ["date", "updatedAt"], defaultSort: "date" });
+  const tab = raw.aba === "destaques" ? "destaques" : "todos";
 
-  const events = await prisma.event.findMany({
-    orderBy: { date: "desc" },
-    include: { _count: { select: { media: true, videos: true } } },
-  });
+  const where: Prisma.EventWhereInput = params.q
+    ? { title: { contains: params.q, mode: "insensitive" } }
+    : {};
+
+  const [events, total, queue] = await Promise.all([
+    prisma.event.findMany({
+      where,
+      orderBy: { [params.sort]: params.dir },
+      skip: skipOf(params),
+      take: params.take,
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        featuredRank: true,
+        date: true,
+        updatedAt: true,
+      },
+    }),
+    prisma.event.count({ where }),
+    prisma.event.findMany({
+      where: { featuredRank: { not: null } },
+      orderBy: { featuredRank: "asc" },
+      select: { id: true, title: true, status: true, featuredRank: true },
+    }),
+  ]);
 
   return (
     <>
       <AdminHeading
         title="Eventos"
-        description="Cobertura fotográfica e agenda."
-        action={{ href: "/admin/eventos/novo", label: "Novo evento" }}
+        description="Gerencie o catálogo de eventos."
+        action={{ href: BASE + "/novo", label: "Novo Evento" }}
       />
-      <SavedNotice show={salvo === "1"} />
+      <SavedNotice show={raw.salvo === "1"} />
+      <FeaturedTabs base={BASE} active={tab} count={queue.length} />
+      <FeaturedNotice aviso={raw.aviso} />
 
-      {events.length ? (
-        <AdminTable headers={["Evento", "Status", "Data", "Fotos", "Vídeos", ""]}>
-          {events.map((event) => (
-            <tr key={event.id} className="border-b border-line last:border-0">
-              <td className="px-4 py-3">
-                <p className="font-semibold">{event.title}</p>
-                <p className="text-xs text-muted">
-                  {[event.location, event.region].filter(Boolean).join(" · ") || "—"}
-                </p>
-              </td>
-              <td className="px-4 py-3">
-                <StatusPill status={event.status} />
-              </td>
-              <td className="px-4 py-3 text-muted">{formatDateShort(event.date)}</td>
-              <td className="px-4 py-3 tabular-nums">{event._count.media}</td>
-              <td className="px-4 py-3 tabular-nums">{event._count.videos}</td>
-              <td className="px-4 py-3">
-                <div className="flex gap-4">
-                  <Link href={"/admin/eventos/" + event.id} className="text-brand hover:underline">
-                    Editar
-                  </Link>
-                  <DeleteButton id={event.id} action={deleteEvent} />
-                </div>
-              </td>
-            </tr>
-          ))}
-        </AdminTable>
+      {tab === "destaques" ? (
+        <FeaturedQueue
+          model="event"
+          base={BASE}
+          items={queue.map((item) => ({ ...item, rank: item.featuredRank }))}
+        />
       ) : (
-        <AdminEmpty>Nenhum evento cadastrado ainda.</AdminEmpty>
+        <>
+          <SearchBar params={params} />
+
+          {events.length ? (
+            <>
+              <AdminTable
+                headers={[
+                  "Registro",
+                  "Status",
+                  <SortHeader key="d" label="Data" field="date" base={BASE} params={params} />,
+                  <SortHeader
+                    key="a"
+                    label="Atualizado"
+                    field="updatedAt"
+                    base={BASE}
+                    params={params}
+                  />,
+                  "Destaque",
+                  "",
+                ]}
+              >
+                {events.map((event) => (
+                  <Row key={event.id}>
+                    <Cell strong>{event.title}</Cell>
+                    <Cell>
+                      <StatusPill status={event.status} />
+                    </Cell>
+                    <Cell>{formatDateShort(event.date)}</Cell>
+                    <Cell>{formatDateTime(event.updatedAt)}</Cell>
+                    <Cell>
+                      <FeaturedStar
+                        model="event"
+                        id={event.id}
+                        rank={event.featuredRank}
+                        back={listHref(BASE, params)}
+                      />
+                    </Cell>
+                    <RowActions
+                      viewHref={`${BASE}/${event.id}`}
+                      editHref={`${BASE}/${event.id}/editar`}
+                    >
+                      <DeleteButton id={event.id} action={deleteEvent} />
+                    </RowActions>
+                  </Row>
+                ))}
+              </AdminTable>
+              <Pagination base={BASE} params={params} total={total} />
+            </>
+          ) : (
+            <AdminEmpty>
+              {params.q
+                ? "Nenhum evento encontrado para essa busca."
+                : "Nenhum evento cadastrado ainda."}
+            </AdminEmpty>
+          )}
+        </>
       )}
     </>
   );

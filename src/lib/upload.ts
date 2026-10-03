@@ -4,7 +4,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB
-export const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+export const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/avif"];
 
 export type UploadResult = { url: string };
 
@@ -19,7 +19,7 @@ export type UploadResult = { url: string };
  */
 export async function storeUpload(file: File): Promise<UploadResult> {
   if (!ACCEPTED_TYPES.includes(file.type)) {
-    throw new Error("Formato não suportado. Envie JPG, PNG, WEBP ou AVIF.");
+    throw new Error("Formato não suportado. Envie JPG, PNG, GIF, WEBP ou AVIF.");
   }
   if (file.size > MAX_UPLOAD_BYTES) {
     throw new Error("Arquivo acima de 5MB. Comprima a imagem antes de enviar.");

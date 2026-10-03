@@ -1,4 +1,4 @@
-import { Inter, Playfair_Display } from "next/font/google";
+import { Inter, Nunito_Sans, Playfair_Display } from "next/font/google";
 
 // Compartilhadas pelos dois layouts raiz (site e painel).
 export const playfair = Playfair_Display({
@@ -10,6 +10,13 @@ export const playfair = Playfair_Display({
 
 export const inter = Inter({
   variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+// So o painel: a fonte do painel de referencia do cliente.
+export const nunito = Nunito_Sans({
+  variable: "--font-nunito",
   subsets: ["latin"],
   display: "swap",
 });

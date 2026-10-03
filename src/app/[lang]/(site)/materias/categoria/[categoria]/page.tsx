@@ -41,7 +41,7 @@ export default async function CategoryPage({ params }: Params) {
     include: {
       articles: {
         where: { status: "PUBLISHED" },
-        orderBy: { publishedAt: "desc" },
+        orderBy: [{ featuredRank: { sort: "asc", nulls: "last" } }, { publishedAt: "desc" }],
         include: { categories: true },
       },
     },

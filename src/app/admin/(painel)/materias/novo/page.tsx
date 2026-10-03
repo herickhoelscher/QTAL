@@ -10,7 +10,7 @@ export default async function NewArticlePage() {
 
   return (
     <>
-      <AdminHeading title="Nova matéria" />
+      <AdminHeading title="Nova Matéria" description="Use este formulário para gerenciar o registro." />
       <ArticleForm categories={categories} />
     </>
   );

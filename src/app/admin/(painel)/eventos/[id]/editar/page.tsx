@@ -27,7 +27,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
 
   return (
     <>
-      <AdminHeading title="Editar evento" description={event.title} />
+      <AdminHeading title="Editar Evento" description="Use este formulário para gerenciar o registro." />
       <EventForm
         categories={categories}
         event={{
@@ -41,6 +41,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
           coverImage: event.coverImage,
           coverAlt: event.coverAlt,
           status: event.status,
+          featured: event.featuredRank !== null,
           categoryIds: event.categories.map((category) => category.id),
           gallery: event.media.map((media) => ({
             url: media.url,

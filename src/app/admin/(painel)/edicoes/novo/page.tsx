@@ -10,7 +10,7 @@ export default async function NewIssuePage() {
 
   return (
     <>
-      <AdminHeading title="Nova edição" />
+      <AdminHeading title="Nova Edição" description="Use este formulário para gerenciar o registro." />
       <IssueForm articles={articles} />
     </>
   );

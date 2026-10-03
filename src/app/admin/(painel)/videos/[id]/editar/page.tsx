@@ -24,7 +24,7 @@ export default async function EditVideoPage({ params }: { params: Promise<{ id: 
 
   return (
     <>
-      <AdminHeading title="Editar vídeo" description={video.title} />
+      <AdminHeading title="Editar Vídeo" description="Use este formulário para gerenciar o registro." />
       <VideoForm
         events={events}
         articles={articles}
@@ -41,7 +41,7 @@ export default async function EditVideoPage({ params }: { params: Promise<{ id: 
           articleId: video.articleId,
           propertyId: video.propertyId,
           eventId: video.eventId,
-          featured: video.featured,
+          featured: video.featuredRank !== null,
           status: video.status,
           categoryIds: video.categories.map((category) => category.id),
         }}

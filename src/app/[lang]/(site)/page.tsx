@@ -1,5 +1,6 @@
 import Link from "@/components/LocalizedLink";
 import { HeroCarousel, type HeroSlide } from "@/components/HeroCarousel";
+import { IssuesShelf } from "@/components/IssuesShelf";
 import { AdCard, ContentCard, PropertyCard, VideoCard } from "@/components/cards";
 import { ExpandableSection } from "@/components/ExpandableSection";
 import { Reveal } from "@/components/Reveal";
@@ -7,6 +8,7 @@ import { VideoFeedCallout } from "@/components/VideoFeedCallout";
 import { SubscribeBlock } from "@/components/SubscribeBlock";
 import { EmptyState, Section, SectionHeading } from "@/components/ui";
 import { prisma } from "@/lib/prisma";
+import { heroItem, loadHeroSlides } from "@/lib/hero";
 import { getSettings, whatsappLink } from "@/lib/settings";
 import { editionLabel, excerpt, formatDateLong } from "@/lib/format";
 import { getDictionary } from "@/lib/i18n/server";
@@ -24,23 +26,15 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function HomePage() {
   const [settings, { locale, t }] = await Promise.all([getSettings(), getDictionary()]);
 
-  const [featured, articles, events, videos, properties, latestIssue] = await Promise.all([
-    prisma.article.findMany({
-      where: { status: "PUBLISHED", featured: true },
-      orderBy: { publishedAt: "desc" },
-      take: 4,
-      include: {
-        categories: true,
-        issueItems: {
-          where: { issue: { status: "PUBLISHED" } },
-          take: 1,
-          include: { issue: { select: { id: true, title: true } } },
-        },
-      },
-    }),
+  // Destaques escolhidos no painel abrem cada bloco, na ordem deles; o resto
+  // do bloco e completado com os mais recentes.
+  const featuredFirst = { featuredRank: { sort: "asc", nulls: "last" } } as const;
+
+  const [heroRows, articles, events, videos, properties, latestIssue] = await Promise.all([
+    loadHeroSlides(),
     prisma.article.findMany({
       where: { status: "PUBLISHED" },
-      orderBy: { publishedAt: "desc" },
+      orderBy: [featuredFirst, { publishedAt: "desc" }],
       take: 9,
       include: {
         categories: true,
@@ -53,19 +47,19 @@ export default async function HomePage() {
     }),
     prisma.event.findMany({
       where: { status: "PUBLISHED" },
-      orderBy: { date: "desc" },
+      orderBy: [featuredFirst, { date: "desc" }],
       take: 6,
       include: { categories: true },
     }),
     prisma.video.findMany({
       where: { status: "PUBLISHED" },
-      orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
+      orderBy: [featuredFirst, { publishedAt: "desc" }],
       take: 6,
       include: { event: { select: { id: true, title: true } } },
     }),
     prisma.property.findMany({
       where: { status: "PUBLISHED" },
-      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+      orderBy: [featuredFirst, { createdAt: "desc" }],
       take: 6,
     }),
     prisma.issue.findFirst({
@@ -74,29 +68,55 @@ export default async function HomePage() {
     }),
   ]);
 
-  const allArticles = [...featured, ...articles];
+  // Faixa "Edicoes anteriores": as publicadas, destaques primeiro.
+  const pastIssues = await prisma.issue.findMany({
+    where: { status: "PUBLISHED" },
+    orderBy: [featuredFirst, { publishedAt: "desc" }],
+    take: 12,
+  });
+
+  // Slides de rascunho ficam no painel, mas nao no site.
+  const heroLive = heroRows.filter((row) => heroItem(row)?.status === "PUBLISHED");
+
   await localize([
-    { model: "article", records: allArticles },
-    { model: "category", records: [...allArticles, ...events].flatMap((item) => item.categories) },
-    { model: "issue", records: [...allArticles.flatMap((a) => a.issueItems.map((i) => i.issue)), latestIssue] },
-    { model: "event", records: [...events, ...videos.map((video) => video.event)] },
-    { model: "video", records: videos },
-    { model: "property", records: properties },
+    { model: "article", records: [...articles, ...heroLive.map((row) => row.article)] },
+    { model: "category", records: [...articles, ...events].flatMap((item) => item.categories) },
+    {
+      model: "issue",
+      records: [
+        ...articles.flatMap((a) => a.issueItems.map((i) => i.issue)),
+        latestIssue,
+        ...pastIssues,
+        ...heroLive.map((row) => row.issue),
+      ],
+    },
+    {
+      model: "event",
+      records: [...events, ...videos.map((video) => video.event), ...heroLive.map((row) => row.event)],
+    },
+    { model: "video", records: [...videos, ...heroLive.map((row) => row.video)] },
+    { model: "property", records: [...properties, ...heroLive.map((row) => row.property)] },
   ]);
 
   const settingsTexts = await localizedSettingsTexts(settings);
 
-  const heroSource = featured.length ? featured : articles.slice(0, 3);
-  const slides: HeroSlide[] = heroSource.map((article) => ({
-    title: article.title,
-    subtitle: article.subtitle ?? excerpt(article.body, 140),
-    href: "/materias/" + article.slug,
-    image: article.coverImage,
-    // A tarja repete o padrao da referencia: a edicao vem antes da editoria.
-    category: article.issueItems?.[0]
-      ? editionLabel(article.issueItems[0].issue.title)
-      : (article.categories[0]?.name ?? null),
-  }));
+  const chosen = heroLive.map(heroItem).filter((item) => item !== null);
+  // Carrossel vazio no painel: as 3 materias mais recentes seguram o topo.
+  const slides: HeroSlide[] = chosen.length
+    ? chosen.map((item) => ({
+        title: item.title,
+        subtitle: item.subtitle,
+        href: item.href,
+        image: item.image,
+        category: t.hero.types[item.type],
+      }))
+    : articles.slice(0, 3).map((article) => ({
+        title: article.title,
+        subtitle: article.subtitle ?? excerpt(article.body, 140),
+        href: "/materias/" + article.slug,
+        image: article.coverImage,
+        category: article.categories[0]?.name ?? null,
+      }));
 
   return (
     <>
@@ -124,7 +144,7 @@ export default async function HomePage() {
               <p className="mt-1 font-display text-2xl italic">{latestIssue.title}</p>
             </div>
             <Link
-              href={"/modo-revista/" + latestIssue.slug}
+              href={"/edicoes/" + latestIssue.slug}
               className="eyebrow shrink-0 rounded-full bg-white px-6 py-3 text-ink transition-colors hover:bg-accent hover:text-white"
             >
               {t.home.browseIssue}
@@ -162,7 +182,7 @@ export default async function HomePage() {
                           ? editionLabel(article.issueItems[0].issue.title)
                           : null
                       }
-                      aspect={article.featured ? "3/4" : "4/3"}
+                      aspect={article.featuredRank !== null ? "3/4" : "4/3"}
                     />
                   </Reveal>
                 ),
@@ -295,6 +315,18 @@ export default async function HomePage() {
           )}
         </Section>
       </div>
+
+      {pastIssues.length ? (
+        <IssuesShelf
+          siteName={settings.siteName}
+          logoUrl={settings.clientLogoUrl}
+          issues={pastIssues.map((issue) => ({
+            slug: issue.slug,
+            title: issue.title,
+            cover: issue.coverImage,
+          }))}
+        />
+      ) : null}
 
       <SubscribeBlock href={whatsappLink(settings.whatsappNumber, settingsTexts.whatsappMessage)} />
 

@@ -29,7 +29,7 @@ export default async function EditArticlePage({
 
   return (
     <>
-      <AdminHeading title="Editar matéria" description={article.title} />
+      <AdminHeading title="Editar Matéria" description="Use este formulário para gerenciar o registro." />
       <ArticleForm
         categories={categories}
         article={{
@@ -42,7 +42,7 @@ export default async function EditArticlePage({
           coverAlt: article.coverAlt,
           region: article.region,
           status: article.status,
-          featured: article.featured,
+          featured: article.featuredRank !== null,
           publishedAt: toLocalInput(article.publishedAt),
           metaTitle: article.metaTitle,
           metaDescription: article.metaDescription,

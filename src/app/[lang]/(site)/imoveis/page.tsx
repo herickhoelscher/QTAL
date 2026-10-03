@@ -37,7 +37,7 @@ export default async function PropertiesPage({ searchParams }: Props) {
   const [properties, cities] = await Promise.all([
     prisma.property.findMany({
       where,
-      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+      orderBy: [{ featuredRank: { sort: "asc", nulls: "last" } }, { createdAt: "desc" }],
     }),
     prisma.property.findMany({
       where: { status: "PUBLISHED" },

@@ -20,12 +20,18 @@ export function GalleryField({
   hint,
   defaultValue = [],
   withAlbums = false,
+  withHighlight = true,
+  numbered = false,
 }: {
   name: string;
   label: string;
   hint: string;
   defaultValue?: GalleryItem[];
   withAlbums?: boolean;
+  /** Botao de foto de destaque da galeria. As paginas da revista nao usam. */
+  withHighlight?: boolean;
+  /** Mostra "Pág. 1, 2..." — a ordem e a ordem de leitura. */
+  numbered?: boolean;
 }) {
   const [items, setItems] = useState<GalleryItem[]>(defaultValue);
   const [uploading, setUploading] = useState(false);
@@ -84,8 +90,8 @@ export function GalleryField({
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-sm font-semibold text-ink">{label}</span>
+    <div className="flex flex-col gap-1.5 md:col-span-2">
+      <span className="text-[13px] font-semibold text-ink">{label}</span>
       <p className="text-xs text-muted">{hint}</p>
 
       <input type="hidden" name={name} value={JSON.stringify(items)} />
@@ -94,49 +100,52 @@ export function GalleryField({
         <input
           type="file"
           multiple
-          accept="image/jpeg,image/png,image/webp,image/avif"
+          accept="image/jpeg,image/png,image/gif,image/webp,image/avif"
           onChange={(event) => {
             if (event.target.files?.length) void uploadMany(event.target.files);
             event.target.value = "";
           }}
-          className="text-sm file:mr-3 file:border file:border-line file:bg-surface-alt file:px-4 file:py-2 file:text-sm"
+          className="text-sm text-muted file:mr-3 file:rounded-lg file:border file:border-line file:bg-surface-alt file:px-4 file:py-2 file:text-sm file:text-ink"
         />
         {uploading ? <span className="text-xs text-muted">Enviando…</span> : null}
       </div>
 
-      {error ? <p className="text-xs text-brand">{error}</p> : null}
+      {error ? <p className="text-xs text-danger">{error}</p> : null}
 
       {items.length ? (
         <ul className="mt-3 grid gap-3 sm:grid-cols-2">
           {items.map((item, index) => (
-            <li key={item.url + index} className="flex gap-3 border border-line p-3">
+            <li key={item.url + index} className="flex gap-3 rounded-xl border border-line p-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.url} alt="" className="h-20 w-20 shrink-0 object-cover" />
+              <img src={item.url} alt="" className="h-20 w-20 shrink-0 rounded-lg object-cover" />
               <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <input
                   value={item.altText ?? ""}
                   onChange={(event) => update(index, { altText: event.target.value })}
                   placeholder="Descrição da imagem (acessibilidade)"
-                  className="w-full border border-line px-2 py-1 text-xs"
+                  className="w-full rounded-md border border-line bg-surface px-2 py-1 text-xs text-ink"
                 />
                 {withAlbums ? (
                   <input
                     value={item.album ?? ""}
                     onChange={(event) => update(index, { album: event.target.value })}
                     placeholder="Bloco / álbum (opcional)"
-                    className="w-full border border-line px-2 py-1 text-xs"
+                    className="w-full rounded-md border border-line bg-surface px-2 py-1 text-xs text-ink"
                   />
                 ) : null}
                 <div className="flex items-center gap-3 text-xs">
-                  <button
-                    type="button"
-                    onClick={() => toggleFeatured(index)}
-                    aria-pressed={Boolean(item.featured)}
-                    title="Abre grande no topo da galeria"
-                    className={item.featured ? "text-brand" : "text-muted"}
-                  >
-                    {item.featured ? "★ destaque" : "☆ destacar"}
-                  </button>
+                  {numbered ? <span className="font-bold text-ink">Pág. {index + 1}</span> : null}
+                  {withHighlight ? (
+                    <button
+                      type="button"
+                      onClick={() => toggleFeatured(index)}
+                      aria-pressed={Boolean(item.featured)}
+                      title="Abre grande no topo da galeria"
+                      className={item.featured ? "text-brand" : "text-muted"}
+                    >
+                      {item.featured ? "★ destaque" : "☆ destacar"}
+                    </button>
+                  ) : null}
                   <button type="button" onClick={() => move(index, -1)} className="text-muted">
                     ← mover
                   </button>
@@ -146,7 +155,7 @@ export function GalleryField({
                   <button
                     type="button"
                     onClick={() => setItems((c) => c.filter((_, i) => i !== index))}
-                    className="ml-auto text-brand"
+                    className="ml-auto text-danger"
                   >
                     remover
                   </button>

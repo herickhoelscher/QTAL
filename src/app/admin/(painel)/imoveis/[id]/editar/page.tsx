@@ -19,7 +19,7 @@ export default async function EditPropertyPage({
 
   return (
     <>
-      <AdminHeading title="Editar imóvel" description={property.title} />
+      <AdminHeading title="Editar Imóvel" description="Use este formulário para gerenciar o registro." />
       <PropertyForm
         property={{
           id: property.id,
@@ -40,7 +40,7 @@ export default async function EditPropertyPage({
           coverAlt: property.coverAlt,
           mapEmbedUrl: property.mapEmbedUrl,
           tourUrl: property.tourUrl,
-          featured: property.featured,
+          featured: property.featuredRank !== null,
           status: property.status,
           gallery: property.gallery.map((media) => ({
             url: media.url,

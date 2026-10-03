@@ -7,9 +7,10 @@ import { ImageField } from "@/components/admin/ImageField";
 import {
   Checkbox,
   Field,
+  FormActions,
+  FormError,
   FormSection,
   Select,
-  SubmitButton,
   TextArea,
   TextInput,
 } from "@/components/admin/form";
@@ -49,11 +50,7 @@ export function VideoForm({
     <form action={formAction} className="grid gap-6">
       <input type="hidden" name="id" value={video.id ?? ""} />
 
-      {state.error ? (
-        <p role="alert" className="border-l-2 border-brand bg-surface p-3 text-sm text-brand">
-          {state.error}
-        </p>
-      ) : null}
+      <FormError message={state.error} />
 
       <FormSection
         title="Vídeo"
@@ -82,7 +79,7 @@ export function VideoForm({
           <TextInput id="slug" name="slug" defaultValue={video.slug} />
         </Field>
 
-        <Field label="Descrição" htmlFor="description">
+        <Field wide label="Descrição" htmlFor="description">
           <TextArea
             id="description"
             name="description"
@@ -101,7 +98,7 @@ export function VideoForm({
         <ImageField
           name="customThumbnail"
           label="Capa personalizada (opcional)"
-          hint="JPG ou WEBP — 1280×720px (16:9) para vídeo deitado, 1080×1920px (9:16) para vertical, até 5MB. Sem isso, usamos a capa do próprio YouTube."
+          hint="JPG, PNG, GIF ou WEBP — 1280×720px (16:9) para vídeo deitado, 1080×1920px (9:16) para vertical, até 5MB. Sem isso, usamos a capa do próprio YouTube."
           defaultValue={video.customThumbnail}
         />
       </FormSection>
@@ -155,7 +152,7 @@ export function VideoForm({
           </Select>
         </Field>
 
-        <fieldset>
+        <fieldset className="md:col-span-2">
           <legend className="mb-2 text-sm font-semibold">Categorias</legend>
           {categories.length ? (
             <div className="flex flex-wrap gap-x-6 gap-y-2">
@@ -175,7 +172,7 @@ export function VideoForm({
           ) : (
             <p className="text-sm text-muted">
               Nenhuma categoria de vídeo cadastrada.{" "}
-              <Link href="/admin/categorias" className="text-brand underline">
+              <Link href="/admin/categorias" className="text-link underline">
                 Criar categorias
               </Link>
             </p>
@@ -189,15 +186,17 @@ export function VideoForm({
           </Select>
         </Field>
 
-        <Checkbox name="featured" label="Destacar na home" defaultChecked={video.featured} />
+        <Checkbox
+          name="featured"
+          label="Destaque"
+          hint="Entra no fim da fila de destaques da seção (até 6). A ordem se ajusta na aba Destaques da lista."
+          defaultChecked={video.featured}
+        />
       </FormSection>
 
-      <div className="flex items-center gap-4">
-        <SubmitButton>Salvar vídeo</SubmitButton>
-        <Link href="/admin/videos" className="text-sm text-muted hover:text-ink">
-          Cancelar
-        </Link>
-      </div>
+      <FormActions cancelHref="/admin/videos">
+        {video.id ? "Atualizar vídeo" : "Criar vídeo"}
+      </FormActions>
     </form>
   );
 }

@@ -37,7 +37,7 @@ export default async function EventsPage({ searchParams }: Props) {
   if (regiao) where.region = regiao;
 
   const [events, categories, regions] = await Promise.all([
-    prisma.event.findMany({ where, orderBy: { date: "desc" }, include: { categories: true } }),
+    prisma.event.findMany({ where, orderBy: [{ featuredRank: { sort: "asc", nulls: "last" } }, { date: "desc" }], include: { categories: true } }),
     prisma.category.findMany({ where: { type: "EVENT" }, orderBy: { name: "asc" } }),
     prisma.event.findMany({
       where: { status: "PUBLISHED", region: { not: null } },

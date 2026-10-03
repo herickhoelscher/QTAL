@@ -10,7 +10,7 @@ export default async function NewEventPage() {
 
   return (
     <>
-      <AdminHeading title="Novo evento" />
+      <AdminHeading title="Novo Evento" description="Use este formulário para gerenciar o registro." />
       <EventForm categories={categories} />
     </>
   );

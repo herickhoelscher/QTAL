@@ -18,7 +18,7 @@ export default async function NewVideoPage() {
 
   return (
     <>
-      <AdminHeading title="Novo vídeo" />
+      <AdminHeading title="Novo Vídeo" description="Use este formulário para gerenciar o registro." />
       <VideoForm
         events={events}
         articles={articles}

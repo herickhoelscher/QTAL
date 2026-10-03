@@ -30,7 +30,7 @@ export default async function VideoFeedPage({ searchParams }: Props) {
 
   const videos = await prisma.video.findMany({
     where: { status: "PUBLISHED" },
-    orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
+    orderBy: [{ featuredRank: { sort: "asc", nulls: "last" } }, { publishedAt: "desc" }, { createdAt: "desc" }],
     include: { event: { select: { id: true, title: true, slug: true } } },
   });
 

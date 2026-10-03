@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState } from "react";
 import { saveProperty } from "@/app/admin/actions/content";
 import { GalleryField, type GalleryItem } from "@/components/admin/GalleryField";
@@ -9,9 +8,10 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import {
   Checkbox,
   Field,
+  FormActions,
+  FormError,
   FormSection,
   Select,
-  SubmitButton,
   TextInput,
 } from "@/components/admin/form";
 
@@ -54,11 +54,7 @@ export function PropertyForm({ property = {} }: { property?: PropertyFormData })
     <form action={formAction} className="grid gap-6">
       <input type="hidden" name="id" value={property.id ?? ""} />
 
-      {state.error ? (
-        <p role="alert" className="border-l-2 border-brand bg-surface p-3 text-sm text-brand">
-          {state.error}
-        </p>
-      ) : null}
+      <FormError message={state.error} />
 
       <FormSection title="Identificação">
         <Field label="Título do anúncio" htmlFor="title" required>
@@ -139,7 +135,7 @@ export function PropertyForm({ property = {} }: { property?: PropertyFormData })
         <ImageField
           name="coverImage"
           label="Foto de capa"
-          hint="JPG ou WEBP, 1600×1200px (4:3), até 5MB. É a primeira imagem vista na listagem."
+          hint="JPG, PNG, GIF ou WEBP, 1600×1200px (4:3), até 5MB. É a primeira imagem vista na listagem."
           defaultValue={property.coverImage}
         />
         <Field label="Descrição da capa" htmlFor="coverAlt">
@@ -149,7 +145,7 @@ export function PropertyForm({ property = {} }: { property?: PropertyFormData })
         <GalleryField
           name="gallery"
           label="Galeria de fotos"
-          hint="JPG ou WEBP, 1600×1200px, até 5MB por foto. A ordem definida aqui é a ordem exibida na ficha."
+          hint="JPG, PNG, GIF ou WEBP, 1600×1200px, até 5MB por foto. A ordem definida aqui é a ordem exibida na ficha."
           defaultValue={property.gallery ?? []}
         />
 
@@ -177,15 +173,17 @@ export function PropertyForm({ property = {} }: { property?: PropertyFormData })
             <option value="PUBLISHED">Publicado</option>
           </Select>
         </Field>
-        <Checkbox name="featured" label="Destacar na home" defaultChecked={property.featured} />
+        <Checkbox
+          name="featured"
+          label="Destaque"
+          hint="Entra no fim da fila de destaques da seção (até 6). A ordem se ajusta na aba Destaques da lista."
+          defaultChecked={property.featured}
+        />
       </FormSection>
 
-      <div className="flex items-center gap-4">
-        <SubmitButton>Salvar imóvel</SubmitButton>
-        <Link href="/admin/imoveis" className="text-sm text-muted hover:text-ink">
-          Cancelar
-        </Link>
-      </div>
+      <FormActions cancelHref="/admin/imoveis">
+        {property.id ? "Atualizar imóvel" : "Criar imóvel"}
+      </FormActions>
     </form>
   );
 }

@@ -56,9 +56,9 @@ com título, linha de apoio, imagem de capa, rótulo do tipo e link.
 edição ganha o campo **Páginas da revista**, o mesmo componente da galeria.
 
 - **Home:** faixa vermelha "Edições anteriores" (padrão DIFE) com carrossel de
-  capas, setas redondas e botão vazado **VER TODAS AS EDIÇÕES**. Mostra as
-  publicadas menos a mais recente (que já está na faixa do Modo Revista),
-  destaques primeiro.
+  capas, setas redondas e botão vazado **VER TODAS AS EDIÇÕES**. Mostra todas
+  as publicadas, destaques primeiro (com poucas edições, tirar a atual deixava
+  a faixa quase vazia).
 - **`/edicoes`:** grade de todas as capas. Entra no menu.
 - **`/edicoes/[slug]`:** leitor folheável em fundo vermelho, com o título.
   Duas páginas no computador, uma no celular (biblioteca `page-flip`, MIT).
@@ -74,7 +74,7 @@ remoção das colunas `featured` antigas.
 
 ## Verificação
 
-`npm test` (fila de destaques e mistura destaques + recentes), lint, tipos e
+`npm test` (fila de destaques), lint, tipos e
 build. No navegador: home (carrossel com setas, blocos, faixa de edições),
 `/edicoes`, o leitor (todas as funções da barra, celular e computador) e as
 listas do painel (★, aba Destaques, ↑↓, limite de 6).

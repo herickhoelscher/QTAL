@@ -6,7 +6,15 @@ import { saveEvent } from "@/app/admin/actions/content";
 import { GalleryField, type GalleryItem } from "@/components/admin/GalleryField";
 import { ImageField } from "@/components/admin/ImageField";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
-import { Field, FormSection, Select, SubmitButton, TextInput } from "@/components/admin/form";
+import {
+  Checkbox,
+  Field,
+  FormActions,
+  FormError,
+  FormSection,
+  Select,
+  TextInput,
+} from "@/components/admin/form";
 
 export type EventFormData = {
   id?: string;
@@ -19,6 +27,7 @@ export type EventFormData = {
   coverImage?: string | null;
   coverAlt?: string | null;
   status?: string;
+  featured?: boolean;
   categoryIds?: string[];
   gallery?: GalleryItem[];
 };
@@ -36,11 +45,7 @@ export function EventForm({
     <form action={formAction} className="grid gap-6">
       <input type="hidden" name="id" value={event.id ?? ""} />
 
-      {state.error ? (
-        <p role="alert" className="border-l-2 border-brand bg-surface p-3 text-sm text-brand">
-          {state.error}
-        </p>
-      ) : null}
+      <FormError message={state.error} />
 
       <FormSection title="Dados do evento">
         <Field label="Título" htmlFor="title" required>
@@ -85,7 +90,7 @@ export function EventForm({
         <ImageField
           name="coverImage"
           label="Imagem de capa"
-          hint="JPG ou WEBP, 1600×900px (16:9), até 5MB. É a foto do topo da página e dos cards."
+          hint="JPG, PNG, GIF ou WEBP, 1600×900px (16:9), até 5MB. É a foto do topo da página e dos cards."
           defaultValue={event.coverImage}
         />
         <Field label="Descrição da capa" htmlFor="coverAlt">
@@ -95,7 +100,7 @@ export function EventForm({
         <GalleryField
           name="gallery"
           label="Galeria do evento"
-          hint="JPG ou WEBP, 1200×900px, até 5MB por foto. Selecione várias de uma vez. Preencha 'Bloco / álbum' para separar as fotos por momento (ex.: Chegada, Show, Encerramento)."
+          hint="JPG, PNG, GIF ou WEBP, 1200×900px, até 5MB por foto. Selecione várias de uma vez. Preencha 'Bloco / álbum' para separar as fotos por momento (ex.: Chegada, Show, Encerramento)."
           defaultValue={event.gallery ?? []}
           withAlbums
         />
@@ -105,7 +110,7 @@ export function EventForm({
         title="Classificação e publicação"
         description="Os vídeos do evento são cadastrados em Vídeos, vinculados a ele — e aparecem nas duas páginas."
       >
-        <fieldset>
+        <fieldset className="md:col-span-2">
           <legend className="mb-2 text-sm font-semibold">Categorias</legend>
           {categories.length ? (
             <div className="flex flex-wrap gap-x-6 gap-y-2">
@@ -125,7 +130,7 @@ export function EventForm({
           ) : (
             <p className="text-sm text-muted">
               Nenhuma categoria de evento cadastrada.{" "}
-              <Link href="/admin/categorias" className="text-brand underline">
+              <Link href="/admin/categorias" className="text-link underline">
                 Criar categorias
               </Link>
             </p>
@@ -138,14 +143,17 @@ export function EventForm({
             <option value="PUBLISHED">Publicado</option>
           </Select>
         </Field>
+        <Checkbox
+          name="featured"
+          label="Destaque"
+          hint="Entra no fim da fila de destaques da seção (até 6). A ordem se ajusta na aba Destaques da lista."
+          defaultChecked={event.featured}
+        />
       </FormSection>
 
-      <div className="flex items-center gap-4">
-        <SubmitButton>Salvar evento</SubmitButton>
-        <Link href="/admin/eventos" className="text-sm text-muted hover:text-ink">
-          Cancelar
-        </Link>
-      </div>
+      <FormActions cancelHref="/admin/eventos">
+        {event.id ? "Atualizar evento" : "Criar evento"}
+      </FormActions>
     </form>
   );
 }

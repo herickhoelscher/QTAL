@@ -10,6 +10,7 @@ import { slugify, uniqueSlug } from "@/lib/slug";
 import { parseVideoUrl } from "@/lib/video";
 import type { ActionState } from "@/app/admin/actions/auth";
 import { deleteTranslations, translateRecord } from "@/lib/i18n/content";
+import { compactFeatured, featuredCapacityError, setFeatured } from "@/lib/featured-db";
 
 type GalleryInput = {
   url: string;
@@ -60,6 +61,15 @@ function revalidateSite() {
   revalidatePath("/[lang]", "layout");
 }
 
+/**
+ * Excluir pela pagina Ver: ela deixa de existir, entao volta para a lista.
+ * So aceita destinos dentro do painel.
+ */
+function afterDelete(formData: FormData) {
+  const target = text(formData, "redirectTo");
+  if (target.startsWith("/admin/")) redirect(target);
+}
+
 function categoryIds(formData: FormData): string[] {
   return formData.getAll("categories").map(String).filter(Boolean);
 }
@@ -77,6 +87,9 @@ export async function saveArticle(
   const body = sanitizeHtml(text(formData, "body"));
 
   if (!title) return { error: "O título é obrigatório." };
+  const wantsFeatured = formData.get("featured") === "on";
+  const featuredError = await featuredCapacityError("article", id || null, wantsFeatured);
+  if (featuredError) return { error: featuredError };
   if (!body || body === "<p></p>") return { error: "Escreva o corpo da matéria." };
 
   const desiredSlug = text(formData, "slug") || title;
@@ -98,7 +111,6 @@ export async function saveArticle(
     region: optional(formData, "region"),
     metaTitle: optional(formData, "metaTitle"),
     metaDescription: optional(formData, "metaDescription"),
-    featured: formData.get("featured") === "on",
     status: nextStatus,
     publishedAt: publishedAtValue
       ? new Date(publishedAtValue)
@@ -137,6 +149,7 @@ export async function saveArticle(
   }
 
   if (article.status === "PUBLISHED") await translateRecord("article", article.id);
+  await setFeatured("article", article.id, wantsFeatured);
   revalidateSite();
   redirect("/admin/materias?salvo=1");
 }
@@ -145,9 +158,11 @@ export async function deleteArticle(formData: FormData) {
   await requireSession();
   const id = String(formData.get("id"));
   await prisma.article.delete({ where: { id } });
+  await compactFeatured("article");
   await deleteTranslations("article", id);
   revalidatePath("/admin/materias");
   revalidateSite();
+  afterDelete(formData);
 }
 
 // ------------------------------------------------------------------ Eventos
@@ -160,6 +175,9 @@ export async function saveEvent(_state: ActionState, formData: FormData): Promis
   const dateValue = text(formData, "date");
 
   if (!title) return { error: "O título é obrigatório." };
+  const wantsFeatured = formData.get("featured") === "on";
+  const featuredError = await featuredCapacityError("event", id || null, wantsFeatured);
+  if (featuredError) return { error: featuredError };
   if (!dateValue) return { error: "Informe a data do evento." };
 
   const slug = await uniqueSlug(text(formData, "slug") || title, async (candidate) => {
@@ -206,6 +224,7 @@ export async function saveEvent(_state: ActionState, formData: FormData): Promis
   }
 
   if (event.status === "PUBLISHED") await translateRecord("event", event.id);
+  await setFeatured("event", event.id, wantsFeatured);
   revalidateSite();
   redirect("/admin/eventos?salvo=1");
 }
@@ -214,9 +233,11 @@ export async function deleteEvent(formData: FormData) {
   await requireSession();
   const id = String(formData.get("id"));
   await prisma.event.delete({ where: { id } });
+  await compactFeatured("event");
   await deleteTranslations("event", id);
   revalidatePath("/admin/eventos");
   revalidateSite();
+  afterDelete(formData);
 }
 
 // ------------------------------------------------------------------ Imóveis
@@ -232,6 +253,9 @@ export async function saveProperty(
   const city = text(formData, "city");
 
   if (!title) return { error: "O título é obrigatório." };
+  const wantsFeatured = formData.get("featured") === "on";
+  const featuredError = await featuredCapacityError("property", id || null, wantsFeatured);
+  if (featuredError) return { error: featuredError };
   if (!city) return { error: "Informe a cidade do imóvel." };
 
   const slug = await uniqueSlug(text(formData, "slug") || title, async (candidate) => {
@@ -262,7 +286,6 @@ export async function saveProperty(
     coverAlt: optional(formData, "coverAlt"),
     mapEmbedUrl: optional(formData, "mapEmbedUrl"),
     tourUrl: optional(formData, "tourUrl"),
-    featured: formData.get("featured") === "on",
     status: status(formData),
   };
 
@@ -285,6 +308,7 @@ export async function saveProperty(
   }
 
   if (property.status === "PUBLISHED") await translateRecord("property", property.id);
+  await setFeatured("property", property.id, wantsFeatured);
   revalidateSite();
   redirect("/admin/imoveis?salvo=1");
 }
@@ -293,9 +317,11 @@ export async function deleteProperty(formData: FormData) {
   await requireSession();
   const id = String(formData.get("id"));
   await prisma.property.delete({ where: { id } });
+  await compactFeatured("property");
   await deleteTranslations("property", id);
   revalidatePath("/admin/imoveis");
   revalidateSite();
+  afterDelete(formData);
 }
 
 // ------------------------------------------------------------------- Vídeos
@@ -308,6 +334,9 @@ export async function saveVideo(_state: ActionState, formData: FormData): Promis
   const externalUrl = text(formData, "externalUrl");
 
   if (!title) return { error: "O título é obrigatório." };
+  const wantsFeatured = formData.get("featured") === "on";
+  const featuredError = await featuredCapacityError("video", id || null, wantsFeatured);
+  if (featuredError) return { error: featuredError };
 
   const parsed = parseVideoUrl(externalUrl);
   if (!parsed) {
@@ -335,7 +364,6 @@ export async function saveVideo(_state: ActionState, formData: FormData): Promis
     // A caixa so aparece no formulario depois que o link foi colado; sem ela,
     // vale o palpite do proprio link (shorts/reel = retrato).
     vertical: formData.has("vertical") ? formData.get("vertical") === "on" : parsed.vertical,
-    featured: formData.get("featured") === "on",
     status: nextStatus,
     publishedAt: nextStatus === "PUBLISHED" ? new Date() : null,
   };
@@ -370,6 +398,7 @@ export async function saveVideo(_state: ActionState, formData: FormData): Promis
 
   if (video.status === "PUBLISHED") await translateRecord("video", video.id);
   // O video aparece tambem em materias, eventos e imoveis: renova o site todo.
+  await setFeatured("video", video.id, wantsFeatured);
   revalidateSite();
   redirect("/admin/videos?salvo=1");
 }
@@ -378,9 +407,11 @@ export async function deleteVideo(formData: FormData) {
   await requireSession();
   const id = String(formData.get("id"));
   await prisma.video.delete({ where: { id } });
+  await compactFeatured("video");
   await deleteTranslations("video", id);
   revalidatePath("/admin/videos");
   revalidateSite();
+  afterDelete(formData);
 }
 
 // ------------------------------------------------ Edições (Modo Revista)
@@ -391,6 +422,9 @@ export async function saveIssue(_state: ActionState, formData: FormData): Promis
   const id = text(formData, "id");
   const title = text(formData, "title");
   if (!title) return { error: "O título da edição é obrigatório." };
+  const wantsFeatured = formData.get("featured") === "on";
+  const featuredError = await featuredCapacityError("issue", id || null, wantsFeatured);
+  if (featuredError) return { error: featuredError };
 
   const slug = await uniqueSlug(text(formData, "slug") || title, async (candidate) => {
     const found = await prisma.issue.findUnique({ where: { slug: candidate } });
@@ -398,13 +432,18 @@ export async function saveIssue(_state: ActionState, formData: FormData): Promis
   });
 
   const nextStatus = status(formData);
+  // Editar uma edicao ja publicada nao muda a data dela: e a data que decide
+  // qual e a edicao atual e quais sao as anteriores.
+  const previous = id
+    ? await prisma.issue.findUnique({ where: { id }, select: { publishedAt: true } })
+    : null;
   const data = {
     title,
     slug,
     description: optional(formData, "description"),
     coverImage: optional(formData, "coverImage"),
     status: nextStatus,
-    publishedAt: nextStatus === "PUBLISHED" ? new Date() : null,
+    publishedAt: nextStatus === "PUBLISHED" ? (previous?.publishedAt ?? new Date()) : null,
   };
 
   const issue = id
@@ -424,7 +463,22 @@ export async function saveIssue(_state: ActionState, formData: FormData): Promis
     });
   }
 
+  // Paginas da revista folheavel, na ordem em que ficaram no campo.
+  const pages = parseGallery(formData, "pages");
+  await prisma.mediaAsset.deleteMany({ where: { issueId: issue.id } });
+  if (pages.length) {
+    await prisma.mediaAsset.createMany({
+      data: pages.map((item, position) => ({
+        url: item.url,
+        altText: item.altText || null,
+        position,
+        issueId: issue.id,
+      })),
+    });
+  }
+
   if (issue.status === "PUBLISHED") await translateRecord("issue", issue.id);
+  await setFeatured("issue", issue.id, wantsFeatured);
   revalidateSite();
   redirect("/admin/edicoes?salvo=1");
 }
@@ -433,9 +487,11 @@ export async function deleteIssue(formData: FormData) {
   await requireSession();
   const id = String(formData.get("id"));
   await prisma.issue.delete({ where: { id } });
+  await compactFeatured("issue");
   await deleteTranslations("issue", id);
   revalidatePath("/admin/edicoes");
   revalidateSite();
+  afterDelete(formData);
 }
 
 // --------------------------------------------------------------- Categorias
@@ -446,19 +502,24 @@ export async function saveCategory(
 ): Promise<ActionState> {
   await requireSession();
 
+  const id = text(formData, "id");
   const name = text(formData, "name");
   const type = text(formData, "type") as Prisma.CategoryCreateInput["type"];
   if (!name) return { error: "Informe o nome da categoria." };
 
   const slug = slugify(name);
-  const existing = await prisma.category.findFirst({ where: { slug, type } });
+  const existing = await prisma.category.findFirst({
+    where: { slug, type, ...(id ? { id: { not: id } } : {}) },
+  });
   if (existing) return { error: "Já existe uma categoria com esse nome nesse módulo." };
 
-  const category = await prisma.category.create({ data: { name, slug, type } });
+  const category = id
+    ? await prisma.category.update({ where: { id }, data: { name, slug, type } })
+    : await prisma.category.create({ data: { name, slug, type } });
   await translateRecord("category", category.id);
   revalidatePath("/admin/categorias");
   revalidateSite();
-  return { success: "Categoria criada." };
+  redirect("/admin/categorias?salvo=1");
 }
 
 export async function deleteCategory(formData: FormData) {
@@ -468,4 +529,5 @@ export async function deleteCategory(formData: FormData) {
   await deleteTranslations("category", id);
   revalidatePath("/admin/categorias");
   revalidateSite();
+  afterDelete(formData);
 }

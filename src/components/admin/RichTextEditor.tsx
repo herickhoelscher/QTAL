@@ -70,10 +70,10 @@ export function RichTextEditor({
   );
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-sm font-semibold text-ink">
+    <div className="flex flex-col gap-1.5 md:col-span-2">
+      <span className="text-[13px] font-semibold text-ink">
         {label}
-        <span className="text-brand"> *</span>
+        <span className="text-danger"> *</span>
       </span>
 
       <div className="flex flex-wrap gap-1 border border-b-0 border-line bg-surface-alt p-2">
@@ -83,7 +83,7 @@ export function RichTextEditor({
             type="button"
             title={item.title}
             onClick={() => run(item)}
-            className="border border-line bg-surface px-2.5 py-1 text-xs hover:border-brand hover:text-brand"
+            className="rounded-md border border-line bg-surface px-2.5 py-1 text-xs text-ink hover:border-ink"
           >
             {item.label}
           </button>
@@ -99,7 +99,7 @@ export function RichTextEditor({
         role="textbox"
         aria-multiline="true"
         aria-label={label}
-        className="prose-editorial min-h-64 border border-line bg-surface px-4 py-3 outline-none focus:border-brand"
+        className="prose-editorial min-h-64 rounded-xl border border-line bg-surface px-4 py-3 outline-none focus:border-ink focus:ring-1 focus:ring-ink"
       />
 
       <input type="hidden" name={name} value={html} />
