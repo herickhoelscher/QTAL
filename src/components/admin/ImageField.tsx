@@ -15,14 +15,21 @@ export function ImageField({
   hint,
   defaultValue,
   required,
+  onChange,
 }: {
   name: string;
   label: string;
   hint: string;
   defaultValue?: string | null;
   required?: boolean;
+  /** Avisa a cada imagem enviada ou removida (ex.: previa da capa). */
+  onChange?: (url: string) => void;
 }) {
-  const [url, setUrl] = useState(defaultValue ?? "");
+  const [url, setStoredUrl] = useState(defaultValue ?? "");
+  const setUrl = (next: string) => {
+    setStoredUrl(next);
+    onChange?.(next);
+  };
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);

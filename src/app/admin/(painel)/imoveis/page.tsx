@@ -40,6 +40,7 @@ export default async function AdminPropertiesPage({
         OR: [
           { title: { contains: params.q, mode: "insensitive" } },
           { city: { contains: params.q, mode: "insensitive" } },
+          { neighborhood: { contains: params.q, mode: "insensitive" } },
         ],
       }
     : {};

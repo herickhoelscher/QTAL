@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "@/components/LocalizedLink";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import type { PageFlip } from "page-flip";
 import { useI18n } from "@/components/I18nProvider";
+import { CoverOverlay } from "@/components/IssueCover";
 import { fmt } from "@/lib/i18n/locales";
+import type { FlipPage } from "@/lib/issue-cover";
 
-export type FlipPage = { url: string; alt: string | null };
+export type { FlipPage };
 
 const ZOOM_LEVELS = [1, 1.5, 2, 3];
 
@@ -43,6 +46,8 @@ export function FlipbookReader({
   const [zoom, setZoom] = useState(1);
   const [fullscreen, setFullscreen] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Onde o React escreve o texto das capas montadas, dentro das paginas da biblioteca.
+  const [coverHosts, setCoverHosts] = useState<{ index: number; host: HTMLElement }[]>([]);
 
   const total = pages.length;
 
@@ -57,19 +62,29 @@ export function FlipbookReader({
       const mount = document.createElement("div");
       host.appendChild(mount);
 
+      const hosts: { index: number; host: HTMLElement }[] = [];
       const elements = pages.map((page, index) => {
         const element = document.createElement("div");
         element.className = "flip-page";
         // A capa e a contracapa ficam "duras", como numa revista de verdade.
         if (index === 0 || index === total - 1) element.dataset.density = "hard";
-        const image = document.createElement("img");
-        image.src = page.url;
-        image.alt = page.alt ?? "";
-        image.draggable = false;
-        image.loading = index < 4 ? "eager" : "lazy";
-        element.appendChild(image);
+        if (page.url) {
+          const image = document.createElement("img");
+          image.src = page.url;
+          image.alt = page.cover ? "" : (page.alt ?? "");
+          image.draggable = false;
+          image.loading = index < 4 ? "eager" : "lazy";
+          element.appendChild(image);
+        }
+        if (page.cover) {
+          element.classList.add("flip-page--cover");
+          const host = document.createElement("div");
+          element.appendChild(host);
+          hosts.push({ index, host });
+        }
         return element;
       });
+      setCoverHosts(hosts);
       elements.forEach((element) => mount.appendChild(element));
 
       const flip = new PageFlip(mount, {
@@ -136,6 +151,13 @@ export function FlipbookReader({
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
 
+  // Entrar ou sair da tela cheia muda o tamanho da area so depois que o React
+  // aplica o layout novo; o resize da janela chega antes. Recalcula em seguida.
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => book.current?.update());
+    return () => cancelAnimationFrame(frame);
+  }, [fullscreen]);
+
   function toggleFullscreen() {
     if (document.fullscreenElement) void document.exitFullscreen();
     else void root.current?.requestFullscreen?.();
@@ -171,6 +193,17 @@ export function FlipbookReader({
 
   const zoomIndex = ZOOM_LEVELS.indexOf(zoom);
 
+  // Revista aberta: a capa sozinha fica na metade direita e a contracapa na
+  // esquerda. Desloca um quarto para que fiquem no centro, como no celular.
+  const aloneShift =
+    landscape && spread.length === 1 && total > 1
+      ? current === 0
+        ? "-25%"
+        : current === total - 1 && total % 2 === 0
+          ? "25%"
+          : null
+      : null;
+
   return (
     <div
       ref={root}
@@ -179,7 +212,9 @@ export function FlipbookReader({
         (fullscreen ? "flex h-full flex-col justify-center bg-brand p-4" : "")
       }
     >
-      <div className="relative mx-auto flex items-center gap-2 md:gap-6">
+      {/* w-full: em tela cheia o pai vira coluna flex e, sem isso, a linha encolhe
+          ate o minimo da revista e as paginas saem do lugar. */}
+      <div className="relative mx-auto flex w-full items-center gap-2 md:gap-6">
         <ArrowButton
           label={t.reader.prev}
           direction="prev"
@@ -199,14 +234,16 @@ export function FlipbookReader({
         >
           {!ready && pages[0] ? (
             // Enquanto a biblioteca carrega, a capa segura o lugar.
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={pages[0].url}
-              alt={pages[0].alt ?? ""}
+            <PageArt
+              page={pages[0]}
               className="mx-auto aspect-[3/4] w-1/2 min-w-[240px] object-cover shadow-2xl"
             />
           ) : null}
-          <div ref={stage} className={ready ? "" : "absolute inset-0 opacity-0"} />
+          <div
+            ref={stage}
+            className={ready ? "transition-transform duration-300" : "absolute inset-0 opacity-0"}
+            style={{ transform: aloneShift ? `translateX(${aloneShift})` : undefined }}
+          />
         </div>
 
         <ArrowButton
@@ -330,10 +367,9 @@ export function FlipbookReader({
                     (spread.includes(index) ? "ring-white" : "ring-transparent hover:ring-white/60")
                   }
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={page.url}
-                    alt=""
+                  <PageArt
+                    page={page}
+                    decorative
                     loading="lazy"
                     className="aspect-[3/4] w-full object-cover"
                   />
@@ -377,11 +413,9 @@ export function FlipbookReader({
             {spread
               .filter((index) => index < total)
               .map((index) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <PageArt
                   key={index}
-                  src={pages[index].url}
-                  alt={pages[index].alt ?? ""}
+                  page={pages[index]}
                   className="max-w-none object-contain"
                   style={{ width: spread.length > 1 ? "50%" : "70%" }}
                 />
@@ -389,7 +423,58 @@ export function FlipbookReader({
           </div>
         </Overlay>
       ) : null}
+
+      {coverHosts.map(({ index, host }) => {
+        const cover = pages[index]?.cover;
+        return cover ? createPortal(<CoverOverlay text={cover} />, host, "capa-" + index) : null;
+      })}
     </div>
+  );
+}
+
+/** Imagem de uma pagina fora do livro (miniatura, zoom); na capa montada, com o texto. */
+function PageArt({
+  page,
+  className = "",
+  style,
+  loading,
+  decorative,
+}: {
+  page: FlipPage;
+  className?: string;
+  style?: CSSProperties;
+  loading?: "lazy" | "eager";
+  /** Miniatura dentro de um botao que ja tem rotulo: a imagem nao precisa de texto. */
+  decorative?: boolean;
+}) {
+  if (!page.cover) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={page.url}
+        alt={decorative ? "" : (page.alt ?? "")}
+        loading={loading}
+        className={className}
+        style={style}
+      />
+    );
+  }
+  return (
+    <span
+      className={"relative block aspect-[3/4] overflow-hidden bg-[#1b1d22] " + className}
+      style={style}
+    >
+      {page.url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={page.url}
+          alt=""
+          loading={loading}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : null}
+      <CoverOverlay text={page.cover} />
+    </span>
   );
 }
 

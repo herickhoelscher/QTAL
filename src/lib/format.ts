@@ -60,6 +60,14 @@ export function formatDateLong(date: Date | string, locale: Locale = DEFAULT_LOC
   return LONG_DATE[locale].format(new Date(date));
 }
 
+/** "Outubro de 2026": a data de uma edicao da revista, so a primeira letra maiuscula. */
+export function formatMonthYear(date: Date | string, locale: Locale = DEFAULT_LOCALE): string {
+  const text = new Intl.DateTimeFormat(LOCALE_TAG[locale], { month: "long", year: "numeric" }).format(
+    new Date(date),
+  );
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 export function formatDateShort(date: Date | string, locale: Locale = DEFAULT_LOCALE): string {
   return SHORT_DATE[locale].format(new Date(date));
 }

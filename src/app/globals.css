@@ -68,21 +68,23 @@
   outline: none;
 }
 
+/* Tema escuro no estilo do painel do Cloudflare: cinzas neutros (sem tom
+   azulado), cartoes um degrau mais claros que o fundo e botoes azuis. */
 .admin-theme[data-theme="dark"] {
   color-scheme: dark;
-  --color-ink: #e6eaf2;
-  --color-brand: #e6eaf2;
-  --color-brand-dark: #c3cbdb;
-  --color-on-brand: #050816;
-  --color-surface: #0d1326;
-  --color-surface-alt: #131a31;
-  --color-muted: #9aabc4;
-  --color-line: #263049;
-  --color-link: #6cb2ff;
-  --color-danger: #ff6b81;
-  --color-chrome: #03050f;
-  --color-chrome-active: #1d2236;
-  --color-page: #070b18;
+  --color-ink: #ededed;
+  --color-brand: #3b82f6;
+  --color-brand-dark: #2563eb;
+  --color-on-brand: #ffffff;
+  --color-surface: #1c1c1e;
+  --color-surface-alt: #242426;
+  --color-muted: #a1a1aa;
+  --color-line: #333336;
+  --color-link: #60a5fa;
+  --color-danger: #f87171;
+  --color-chrome: #0f0f10;
+  --color-chrome-active: #2a2a2d;
+  --color-page: #121213;
 }
 
 html {
@@ -338,4 +340,66 @@ body {
   object-fit: cover;
   user-select: none;
   pointer-events: none;
+}
+
+/* Capa montada sem foto: fundo escuro, so o texto. */
+.flip-page--cover {
+  background: #1b1d22;
+}
+
+/* Capa montada pelo site (CoverOverlay): texto sobre a foto da edicao. O
+   proprio bloco e o container das unidades cqw, entao o texto acompanha a
+   largura da capa, da miniatura a tela cheia. */
+.issue-cover {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 6% 7% 8%;
+  container-type: inline-size;
+  color: #fff;
+  font-family: var(--font-playfair), Georgia, "Times New Roman", serif;
+  text-align: left;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 0.55) 0%,
+    rgb(0 0 0 / 0) 28%,
+    rgb(0 0 0 / 0) 45%,
+    rgb(0 0 0 / 0.82) 100%
+  );
+}
+.issue-cover__masthead {
+  display: block;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  letter-spacing: -0.01em;
+  text-shadow: 0 0.4cqw 2cqw rgb(0 0 0 / 0.35);
+}
+.issue-cover .issue-cover__masthead img {
+  display: block;
+  width: auto;
+  height: 14cqw;
+  max-width: 100%;
+  margin: 0 auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+.issue-cover__title {
+  display: block;
+  font-size: 8.5cqw;
+  font-weight: 700;
+  line-height: 1.08;
+  text-wrap: balance;
+  text-shadow: 0 0.3cqw 1.5cqw rgb(0 0 0 / 0.4);
+}
+.issue-cover__subtitle {
+  display: block;
+  margin-top: 2.5cqw;
+  font-size: 3.4cqw;
+  font-style: italic;
+  line-height: 1.3;
+  opacity: 0.92;
 }

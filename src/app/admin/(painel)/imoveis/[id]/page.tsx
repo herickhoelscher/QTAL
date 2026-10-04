@@ -11,6 +11,7 @@ import {
 } from "@/components/admin/ui";
 import { formatCurrency } from "@/lib/format";
 import { pt } from "@/lib/i18n/dictionaries/pt";
+import { fullPlace } from "@/lib/location";
 import { prisma } from "@/lib/prisma";
 
 const BASE = "/admin/imoveis";
@@ -48,8 +49,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
         <DetailItem label="Valor">
           {property.priceOnRequest ? "Sob consulta" : formatCurrency(property.price?.toString())}
         </DetailItem>
-        <DetailItem label="Cidade">{property.city}</DetailItem>
-        <DetailItem label="Região">{property.region}</DetailItem>
+        <DetailItem label="Localização">{fullPlace(property)}</DetailItem>
         <DetailItem label="Endereço">{property.address}</DetailItem>
         <DetailItem label="Área">{property.area ? `${property.area} m²` : null}</DetailItem>
         <DetailItem label="Quartos / banheiros / vagas">

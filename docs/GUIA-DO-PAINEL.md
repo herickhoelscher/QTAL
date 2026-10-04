@@ -59,7 +59,8 @@ Use rascunho para deixar a matéria pronta e publicar no momento certo.
    tamanho ideais — siga essa indicação e a imagem sai nítida em qualquer tela.
 5. Preencha a **descrição da capa**: é o texto que descreve a foto para quem usa leitor de
    tela.
-6. Marque as **categorias** e a **região**.
+6. Marque as **categorias** e escolha **estado, cidade e bairro** (veja
+   [Estado, cidade e bairro](#estado-cidade-e-bairro)).
 7. Em **SEO**, você pode escrever um título e uma descrição próprios para o Google. Deixando
    em branco, o site usa o título e a linha de apoio da matéria.
 8. Mude o status para **Publicado** e clique em **Salvar matéria**.
@@ -68,8 +69,8 @@ Marcar **Destacar no carrossel da home** coloca a matéria no topo da página in
 
 ## Cadastrar um evento
 
-Em **Eventos → Novo evento**, preencha título, data, local e região, e envie as fotos na
-**galeria**. Você pode selecionar várias fotos de uma vez.
+Em **Eventos → Novo evento**, preencha título, data, local, estado, cidade e bairro, e envie
+as fotos na **galeria**. Você pode selecionar várias fotos de uma vez.
 
 O campo **Bloco / álbum** de cada foto separa a galeria por momento — por exemplo, *Chegada*,
 *Show*, *Encerramento*. Fotos sem bloco aparecem juntas no começo.
@@ -88,11 +89,28 @@ cadastrar duas vezes**.
 
 ## Imóveis
 
-Em **Imóveis → Novo imóvel**, preencha a ficha (tipo, cidade, metragem, quartos, banheiros,
-vagas) e o valor. Marcando **Valor sob consulta**, o site mostra "Sob consulta" no lugar do
+Em **Imóveis → Novo imóvel**, preencha a ficha (tipo, estado, cidade, bairro, metragem,
+quartos, banheiros, vagas) e o valor. A cidade é obrigatória no imóvel. Marcando **Valor sob consulta**, o site mostra "Sob consulta" no lugar do
 preço.
 
 O botão de contato do imóvel abre o WhatsApp já com o nome do imóvel na mensagem.
+
+## Estado, cidade e bairro
+
+Matérias, eventos e imóveis têm três listas, uma depois da outra:
+
+1. **Estado:** os 27 estados. Conteúdo novo já abre em Paraná.
+2. **Cidade:** ao escolher o estado, aparecem todas as cidades dele, com o nome oficial do
+   IBGE. Se a lista não carregar, o campo vira texto para você digitar a cidade.
+3. **Bairro:** ao escolher a cidade, aparecem os bairros já usados nela (em matérias, eventos
+   e imóveis). Se o bairro não estiver na lista, escolha **Outro bairro…** e digite. Na
+   próxima vez, ele já aparece na lista.
+
+Não precisa se preocupar com maiúsculas: digitar "centro" numa cidade que já tem "Centro"
+grava "Centro", sem criar um bairro repetido.
+
+No site, a página de **Eventos** filtra por cidade, e a de **Imóveis** filtra por cidade e
+bairro. No painel inicial, o filtro das matérias é por cidade.
 
 ## Destaques
 
@@ -129,6 +147,21 @@ Uma **edição** pode ter as duas coisas:
 
 Sem páginas, a capa leva direto ao Modo Revista. As edições publicadas aparecem na faixa
 vermelha **Edições anteriores** da página inicial e na página **Edições** do menu.
+
+### Capa
+
+Na seção **Capa** do formulário, envie a **foto sem textos** e digite o **título** e o
+**subtítulo**. O site escreve por cima, como numa capa de revista:
+
+- no topo, o nome do site (em **Configurações**) ou o logo, se houver;
+- embaixo, o título em letras grandes e o subtítulo.
+
+A prévia ao lado mostra a capa enquanto você digita. Com título preenchido, a capa entra como
+**primeira página** da revista; envie em **Páginas da revista** só o miolo. Como o texto é
+escrito pelo site, ele fica nítido no zoom e sai traduzido em inglês e espanhol.
+
+Se a capa já vem pronta do designer, com os textos na imagem, deixe o título em branco: a foto
+aparece exatamente como foi enviada.
 
 Em **Edições → Nova Edição**, dê um nome à edição e escolha as matérias na
 coluna da esquerda. A ordem da coluna da direita é a ordem em que as pessoas vão ler — use as

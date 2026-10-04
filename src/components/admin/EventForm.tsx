@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { saveEvent } from "@/app/admin/actions/content";
 import { GalleryField, type GalleryItem } from "@/components/admin/GalleryField";
 import { ImageField } from "@/components/admin/ImageField";
+import { LocationFields } from "@/components/admin/LocationFields";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import {
   Checkbox,
@@ -23,7 +24,9 @@ export type EventFormData = {
   description?: string;
   date?: string;
   location?: string | null;
-  region?: string | null;
+  state?: string | null;
+  city?: string | null;
+  neighborhood?: string | null;
   coverImage?: string | null;
   coverAlt?: string | null;
   status?: string;
@@ -74,9 +77,12 @@ export function EventForm({
           <TextInput id="location" name="location" defaultValue={event.location ?? ""} />
         </Field>
 
-        <Field label="Região" htmlFor="region" hint="Usada no filtro regional da listagem pública.">
-          <TextInput id="region" name="region" defaultValue={event.region ?? ""} />
-        </Field>
+        <LocationFields
+          state={event.state}
+          city={event.city}
+          neighborhood={event.neighborhood}
+          hint="A cidade é usada no filtro da página de eventos."
+        />
 
         <RichTextEditor
           name="description"

@@ -46,3 +46,6 @@ next-env.d.ts
 
 # Mockups do brainstorm (local, nao versionado)
 .superpowers/
+
+# Pacotes de material recebidos do cliente (fotos, PDFs): grandes demais para o Git
+*.zip

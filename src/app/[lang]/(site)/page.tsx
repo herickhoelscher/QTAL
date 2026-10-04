@@ -10,6 +10,7 @@ import { EmptyState, Section, SectionHeading } from "@/components/ui";
 import { prisma } from "@/lib/prisma";
 import { heroItem, loadHeroSlides } from "@/lib/hero";
 import { getSettings, whatsappLink } from "@/lib/settings";
+import { coverText } from "@/lib/issue-cover";
 import { editionLabel, excerpt, formatDateLong } from "@/lib/format";
 import { getDictionary } from "@/lib/i18n/server";
 import { localize, localizedSettingsTexts } from "@/lib/i18n/localize";
@@ -297,7 +298,7 @@ export default async function HomePage() {
                       title={property.title}
                       image={property.coverImage}
                       city={property.city}
-                      region={property.region}
+                      neighborhood={property.neighborhood}
                       type={property.type}
                       price={property.price ? Number(property.price) : null}
                       priceOnRequest={property.priceOnRequest}
@@ -324,6 +325,7 @@ export default async function HomePage() {
             slug: issue.slug,
             title: issue.title,
             cover: issue.coverImage,
+            coverText: coverText(issue, settings),
           }))}
         />
       ) : null}

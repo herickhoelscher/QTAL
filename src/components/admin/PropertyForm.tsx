@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { saveProperty } from "@/app/admin/actions/content";
 import { GalleryField, type GalleryItem } from "@/components/admin/GalleryField";
 import { ImageField } from "@/components/admin/ImageField";
+import { LocationFields } from "@/components/admin/LocationFields";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import {
   Checkbox,
@@ -20,8 +21,9 @@ export type PropertyFormData = {
   title?: string;
   slug?: string;
   type?: string;
+  state?: string | null;
   city?: string;
-  region?: string | null;
+  neighborhood?: string | null;
   address?: string | null;
   price?: string;
   priceOnRequest?: boolean;
@@ -75,14 +77,13 @@ export function PropertyForm({ property = {} }: { property?: PropertyFormData })
           </Select>
         </Field>
 
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="Cidade" htmlFor="city" required>
-            <TextInput id="city" name="city" defaultValue={property.city} required />
-          </Field>
-          <Field label="Região / bairro" htmlFor="region">
-            <TextInput id="region" name="region" defaultValue={property.region ?? ""} />
-          </Field>
-        </div>
+        <LocationFields
+          state={property.state}
+          city={property.city}
+          neighborhood={property.neighborhood}
+          cityRequired
+          hint="Cidade e bairro viram filtros na página de imóveis."
+        />
 
         <Field label="Endereço" htmlFor="address" hint="Aparece na ficha, ao lado do contato.">
           <TextInput id="address" name="address" defaultValue={property.address ?? ""} />

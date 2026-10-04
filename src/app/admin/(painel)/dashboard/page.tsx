@@ -13,24 +13,25 @@ import {
 } from "@/components/admin/ui";
 import { getSession } from "@/lib/auth";
 import { formatDateShort } from "@/lib/format";
+import { placeLabel } from "@/lib/location";
 import { prisma } from "@/lib/prisma";
 
 type Props = {
-  searchParams: Promise<{ ordem?: string; status?: string; regiao?: string }>;
+  searchParams: Promise<{ ordem?: string; status?: string; cidade?: string }>;
 };
 
 export default async function DashboardPage({ searchParams }: Props) {
-  const { ordem = "desc", status = "", regiao = "" } = await searchParams;
+  const { ordem = "desc", status = "", cidade = "" } = await searchParams;
   const direction: Prisma.SortOrder = ordem === "asc" ? "asc" : "desc";
   const session = await getSession();
 
   const where: Prisma.ArticleWhereInput = {};
   if (status === "PUBLISHED" || status === "DRAFT") where.status = status;
-  if (regiao) where.region = regiao;
+  if (cidade) where.city = cidade;
 
   // Uma contagem agrupada por status em cada tabela, em vez de uma consulta por
   // numero: o banco fica longe e cada ida e volta pesa.
-  const [articles, regions, articleCounts, eventCounts, propertyCounts, videoCounts, userCount] =
+  const [articles, cities, articleCounts, eventCounts, propertyCounts, videoCounts, userCount] =
     await Promise.all([
       prisma.article.findMany({
         where,
@@ -39,10 +40,10 @@ export default async function DashboardPage({ searchParams }: Props) {
         take: 100,
       }),
       prisma.article.findMany({
-        where: { region: { not: null } },
-        distinct: ["region"],
-        select: { region: true },
-        orderBy: { region: "asc" },
+        where: { city: { not: null } },
+        distinct: ["city"],
+        select: { city: true },
+        orderBy: { city: "asc" },
       }),
       prisma.article.groupBy({ by: ["status"], _count: { _all: true } }),
       prisma.event.groupBy({ by: ["status"], _count: { _all: true } }),
@@ -80,7 +81,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   ];
 
   const toggleOrder = direction === "desc" ? "asc" : "desc";
-  const orderQuery = new URLSearchParams({ ordem: toggleOrder, status, regiao }).toString();
+  const orderQuery = new URLSearchParams({ ordem: toggleOrder, status, cidade }).toString();
 
   return (
     <div className="mx-auto max-w-[1220px]">
@@ -133,7 +134,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold text-ink">Desempenho das matérias</h2>
-            <p className="mt-1 text-sm text-muted">Visualizações por matéria, com filtro por status e região.</p>
+            <p className="mt-1 text-sm text-muted">Visualizações por matéria, com filtro por status e cidade.</p>
           </div>
 
           <form method="get" className="flex flex-wrap items-end gap-3">
@@ -147,15 +148,15 @@ export default async function DashboardPage({ searchParams }: Props) {
               </Select>
             </label>
             <label className="grid gap-1 text-[13px] font-semibold text-ink">
-              Região
-              <Select name="regiao" defaultValue={regiao} className="min-w-36">
+              Cidade
+              <Select name="cidade" defaultValue={cidade} className="min-w-36">
                 <option value="">Todas</option>
-                {regions
-                  .map((row) => row.region)
-                  .filter((region): region is string => Boolean(region))
-                  .map((region) => (
-                    <option key={region} value={region}>
-                      {region}
+                {cities
+                  .map((row) => row.city)
+                  .filter((city): city is string => Boolean(city))
+                  .map((city) => (
+                    <option key={city} value={city}>
+                      {city}
                     </option>
                   ))}
               </Select>
@@ -171,7 +172,7 @@ export default async function DashboardPage({ searchParams }: Props) {
             headers={[
               "Registro",
               "Status",
-              "Região",
+              "Cidade",
               <Link key="views" href={"/admin/dashboard?" + orderQuery} className="hover:text-ink">
                 Visualizações {direction === "desc" ? "↓" : "↑"}
               </Link>,
@@ -190,7 +191,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                 <Cell>
                   <StatusPill status={article.status} />
                 </Cell>
-                <Cell>{article.region ?? "—"}</Cell>
+                <Cell>{placeLabel(article) ?? "—"}</Cell>
                 <Cell strong>{article.viewCount}</Cell>
                 <Cell>{article.publishedAt ? formatDateShort(article.publishedAt) : "—"}</Cell>
                 <RowActions

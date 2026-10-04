@@ -3,8 +3,8 @@ import { addHeroSlide, removeHeroSlide, reorderHeroSlide } from "@/app/admin/act
 import { CONTROL, PRIMARY_BUTTON } from "@/components/admin/styles";
 import { AdminEmpty, AdminHeading, AdminTable, Card, Cell, Pill, Row } from "@/components/admin/ui";
 import { HERO_LIMIT } from "@/lib/featured";
-import { heroItem, loadHeroSlides, type HeroType } from "@/lib/hero";
-import { prisma } from "@/lib/prisma";
+import { formatDateShort } from "@/lib/format";
+import { heroCandidates, heroItem, loadHeroSlides, type HeroType } from "@/lib/hero";
 
 const BASE = "/admin/carrossel";
 
@@ -29,29 +29,26 @@ const NOTICES: Record<string, string> = {
   "ja-no-carrossel": "Esse conteúdo já está no carrossel.",
 };
 
-/** Busca por titulo nos cinco tipos, para o "Adicionar". */
-async function search(q: string) {
-  const where = { title: { contains: q, mode: "insensitive" as const } };
-  const select = { id: true, title: true, status: true } as const;
-  const take = 5;
-  const orderBy = { updatedAt: "desc" as const };
-  const [article, event, property, video, issue] = await Promise.all([
-    prisma.article.findMany({ where, select, take, orderBy }),
-    prisma.event.findMany({ where, select, take, orderBy }),
-    prisma.property.findMany({ where, select, take, orderBy }),
-    prisma.video.findMany({ where, select, take, orderBy }),
-    prisma.issue.findMany({ where, select, take, orderBy }),
-  ]);
-  const tag =
-    (type: HeroType) =>
-    (row: { id: string; title: string; status: string }) => ({ ...row, type });
-  return [
-    ...article.map(tag("article")),
-    ...event.map(tag("event")),
-    ...property.map(tag("property")),
-    ...video.map(tag("video")),
-    ...issue.map(tag("issue")),
-  ];
+/** Abas do "Adicionar ao carrossel": uma por secao do site. */
+const TABS = [
+  { key: "materias", type: "article", label: "Matérias", empty: "Nenhuma matéria encontrada" },
+  { key: "eventos", type: "event", label: "Eventos", empty: "Nenhum evento encontrado" },
+  { key: "imoveis", type: "property", label: "Imóveis", empty: "Nenhum imóvel encontrado" },
+  { key: "videos", type: "video", label: "Vídeos", empty: "Nenhum vídeo encontrado" },
+  { key: "edicoes", type: "issue", label: "Edições", empty: "Nenhuma edição encontrada" },
+] as const satisfies readonly { key: string; type: HeroType; label: string; empty: string }[];
+
+type Tab = (typeof TABS)[number];
+
+/** Quantos itens a aba mostra de cada vez; "Mostrar mais" soma outro tanto. */
+const PAGE = 10;
+const MAX_SHOWN = 100;
+
+function tabHref(tab: Tab, q = "", shown = PAGE): string {
+  const params = new URLSearchParams({ aba: tab.key });
+  if (q) params.set("q", q);
+  if (shown > PAGE) params.set("qtd", String(shown));
+  return BASE + "?" + params.toString();
 }
 
 function SlideButton({
@@ -60,18 +57,20 @@ function SlideButton({
   dir,
   label,
   disabled,
+  back,
 }: {
   action: (formData: FormData) => Promise<void>;
   id: string;
   dir?: "up" | "down";
   label: string;
   disabled?: boolean;
+  back: string;
 }) {
   return (
     <form action={action}>
       <input type="hidden" name="id" value={id} />
       {dir ? <input type="hidden" name="dir" value={dir} /> : null}
-      <input type="hidden" name="back" value={BASE} />
+      <input type="hidden" name="back" value={back} />
       <button
         type="submit"
         disabled={disabled}
@@ -91,15 +90,24 @@ function SlideButton({
 export default async function AdminHeroPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; aviso?: string }>;
+  searchParams: Promise<{ aba?: string; q?: string; qtd?: string; aviso?: string }>;
 }) {
-  const { q = "", aviso } = await searchParams;
+  const { aba, q = "", qtd, aviso } = await searchParams;
+  const tab = TABS.find((item) => item.key === aba) ?? TABS[0];
   const term = q.trim();
+  const shown = Math.min(MAX_SHOWN, Math.max(PAGE, Math.ceil(Number(qtd) / PAGE) * PAGE || PAGE));
+  // Depois de adicionar, subir ou remover, volta para a mesma aba e busca.
+  const here = tabHref(tab, term, shown);
 
-  const [rows, results] = await Promise.all([loadHeroSlides(), term ? search(term) : null]);
+  const [rows, found] = await Promise.all([
+    loadHeroSlides(),
+    heroCandidates(tab.type, term, shown + 1),
+  ]);
   const slides = rows.map(heroItem).filter((item) => item !== null);
   const inHero = new Set(slides.map((slide) => slide.type + ":" + slide.id));
   const full = slides.length >= HERO_LIMIT;
+  const candidates = found.slice(0, shown);
+  const hasMore = found.length > shown && shown < MAX_SHOWN;
 
   return (
     <>
@@ -157,6 +165,7 @@ export default async function AdminHeroPage({
                     dir="up"
                     label="Subir"
                     disabled={index === 0}
+                    back={here}
                   />
                   <SlideButton
                     action={reorderHeroSlide}
@@ -164,8 +173,14 @@ export default async function AdminHeroPage({
                     dir="down"
                     label="Descer"
                     disabled={index === slides.length - 1}
+                    back={here}
                   />
-                  <SlideButton action={removeHeroSlide} id={slide.slideId} label="Remover" />
+                  <SlideButton
+                    action={removeHeroSlide}
+                    id={slide.slideId}
+                    label="Remover"
+                    back={here}
+                  />
                 </div>
               </td>
             </Row>
@@ -173,26 +188,49 @@ export default async function AdminHeroPage({
         </AdminTable>
       ) : (
         <AdminEmpty>
-          O carrossel está vazio. Enquanto isso, a home mostra as 3 matérias mais recentes. Use a
-          busca abaixo para escolher os slides.
+          O carrossel está vazio. Enquanto isso, a home mostra as 3 matérias mais recentes. Escolha
+          os slides nas abas abaixo.
         </AdminEmpty>
       )}
 
       <Card className="mt-8 p-5 md:p-6">
         <h2 className="text-base font-bold text-ink">Adicionar ao carrossel</h2>
         <p className="mt-0.5 text-sm text-muted">
-          Busque pelo título em matérias, eventos, imóveis, vídeos e edições.
+          Escolha a seção e clique em Adicionar. A busca procura pelo título dentro da aba.
         </p>
+
+        <nav aria-label="Seções" className="mt-4 flex flex-wrap gap-2">
+          {TABS.map((item) => {
+            const current = item.key === tab.key;
+            return (
+              <Link
+                key={item.key}
+                href={tabHref(item)}
+                aria-current={current ? "page" : undefined}
+                className={
+                  "rounded-lg px-4 py-2 text-sm font-semibold transition-colors " +
+                  (current
+                    ? "bg-brand text-on-brand"
+                    : "text-muted hover:bg-surface-alt hover:text-ink")
+                }
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+
         <form method="get" className="mt-4 flex gap-3" role="search">
+          <input type="hidden" name="aba" value={tab.key} />
           <label htmlFor="busca-carrossel" className="sr-only">
-            Buscar conteúdo
+            Buscar em {tab.label.toLowerCase()}
           </label>
           <input
             id="busca-carrossel"
             name="q"
             type="search"
             defaultValue={term}
-            placeholder="Buscar por título"
+            placeholder={"Buscar em " + tab.label.toLowerCase()}
             className={CONTROL}
           />
           <button type="submit" className={PRIMARY_BUTTON + " px-5"}>
@@ -200,46 +238,74 @@ export default async function AdminHeroPage({
           </button>
         </form>
 
-        {results ? (
-          results.length ? (
-            <ul className="mt-4 divide-y divide-line rounded-xl border border-line">
-              {results.map((result) => {
-                const already = inHero.has(result.type + ":" + result.id);
-                return (
-                  <li
-                    key={result.type + result.id}
-                    className="flex items-center justify-between gap-4 px-4 py-3"
-                  >
+        {full ? (
+          <p className="mt-4 text-sm font-semibold text-danger">
+            O carrossel está cheio ({HERO_LIMIT}/{HERO_LIMIT}). Remova um slide para adicionar outro.
+          </p>
+        ) : null}
+
+        {candidates.length ? (
+          <ul className="mt-4 divide-y divide-line rounded-xl border border-line">
+            {candidates.map((item) => {
+              const already = inHero.has(tab.type + ":" + item.id);
+              return (
+                <li key={item.id} className="flex items-center justify-between gap-4 px-4 py-3">
+                  <span className="flex min-w-0 items-center gap-3">
+                    {item.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.image}
+                        alt=""
+                        className="h-10 w-16 shrink-0 rounded-md object-cover"
+                      />
+                    ) : (
+                      <span className="h-10 w-16 shrink-0 rounded-md bg-surface-alt" />
+                    )}
                     <span className="min-w-0 text-sm">
-                      <span className="font-semibold text-ink">{result.title}</span>
-                      <span className="ml-2 text-xs text-muted">
-                        {TYPE_LABEL[result.type]}
-                        {result.status === "PUBLISHED" ? "" : " · rascunho"}
+                      <span className="block truncate font-semibold text-ink">{item.title}</span>
+                      <span className="text-xs text-muted">
+                        {item.date ? formatDateShort(item.date) : "Sem data"}
+                        {item.status === "PUBLISHED" ? "" : " · rascunho, não aparece no site"}
                       </span>
                     </span>
-                    {already ? (
-                      <span className="shrink-0 text-xs font-semibold text-muted">No carrossel</span>
-                    ) : (
-                      <form action={addHeroSlide} className="shrink-0">
-                        <input type="hidden" name="type" value={result.type} />
-                        <input type="hidden" name="id" value={result.id} />
-                        <input type="hidden" name="back" value={BASE} />
-                        <button
-                          type="submit"
-                          disabled={full}
-                          className={PRIMARY_BUTTON + " px-3 py-1.5 text-xs"}
-                        >
-                          Adicionar
-                        </button>
-                      </form>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className="mt-4 text-sm text-muted">Nada encontrado para “{term}”.</p>
-          )
+                  </span>
+                  {already ? (
+                    <span className="shrink-0 text-xs font-semibold text-muted">No carrossel</span>
+                  ) : (
+                    <form action={addHeroSlide} className="shrink-0">
+                      <input type="hidden" name="type" value={tab.type} />
+                      <input type="hidden" name="id" value={item.id} />
+                      <input type="hidden" name="back" value={here} />
+                      <button
+                        type="submit"
+                        disabled={full}
+                        className={PRIMARY_BUTTON + " px-3 py-1.5 text-xs"}
+                      >
+                        Adicionar
+                      </button>
+                    </form>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="mt-4 text-sm text-muted">
+            {tab.empty}
+            {term ? ` para “${term}”.` : "."}
+          </p>
+        )}
+
+        {hasMore ? (
+          <div className="mt-4 text-center">
+            <Link
+              href={tabHref(tab, term, shown + PAGE)}
+              scroll={false}
+              className="text-sm font-semibold text-link hover:underline"
+            >
+              Mostrar mais
+            </Link>
+          </div>
         ) : null}
       </Card>
     </>

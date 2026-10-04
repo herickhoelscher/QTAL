@@ -4,6 +4,8 @@ import { useActionState, useState } from "react";
 import { saveIssue } from "@/app/admin/actions/content";
 import { GalleryField, type GalleryItem } from "@/components/admin/GalleryField";
 import { ImageField } from "@/components/admin/ImageField";
+import { CoverOverlay } from "@/components/IssueCover";
+import { coverText } from "@/lib/issue-cover";
 import {
   Checkbox,
   Field,
@@ -21,6 +23,8 @@ export type IssueFormData = {
   slug?: string;
   description?: string | null;
   coverImage?: string | null;
+  coverTitle?: string | null;
+  coverSubtitle?: string | null;
   status?: string;
   featured?: boolean;
   articleIds?: string[];
@@ -36,12 +40,21 @@ type ArticleOption = { id: string; title: string };
 export function IssueForm({
   issue = {},
   articles,
+  brand,
 }: {
   issue?: IssueFormData;
   articles: ArticleOption[];
+  /** Nome do site e logo, que vao no topo da capa montada. */
+  brand: { siteName: string; clientLogoUrl: string | null };
 }) {
   const [state, formAction] = useActionState(saveIssue, {});
   const [selected, setSelected] = useState<string[]>(issue.articleIds ?? []);
+  const [cover, setCover] = useState({
+    coverImage: issue.coverImage ?? null,
+    coverTitle: issue.coverTitle ?? "",
+    coverSubtitle: issue.coverSubtitle ?? "",
+  });
+  const preview = coverText({ title: issue.title ?? "", ...cover }, brand);
 
   const available = articles.filter((article) => !selected.includes(article.id));
   const byId = new Map(articles.map((article) => [article.id, article]));
@@ -80,12 +93,6 @@ export function IssueForm({
             defaultValue={issue.description ?? ""}
           />
         </Field>
-        <ImageField
-          name="coverImage"
-          label="Capa da edição"
-          hint="JPG, PNG, GIF ou WEBP, 1200×1600px (retrato, 3:4), até 5MB. Aparece na faixa Edições anteriores e na página Edições."
-          defaultValue={issue.coverImage}
-        />
         <Field label="Status" htmlFor="status">
           <Select id="status" name="status" defaultValue={issue.status ?? "DRAFT"}>
             <option value="DRAFT">Rascunho</option>
@@ -101,8 +108,64 @@ export function IssueForm({
       </FormSection>
 
       <FormSection
+        title="Capa"
+        description="Envie a foto sem textos e digite o título: o site escreve por cima o nome da revista, o título e o subtítulo. Se a capa já vem pronta, com textos, deixe o título em branco."
+      >
+        <div className="grid gap-4">
+          <ImageField
+            name="coverImage"
+            label="Foto da capa"
+            hint="JPG, PNG, GIF ou WEBP, 1200×1600px (retrato, 3:4), até 5MB. Aparece na faixa Edições anteriores e na página Edições."
+            defaultValue={issue.coverImage}
+            onChange={(url) => setCover((current) => ({ ...current, coverImage: url || null }))}
+          />
+          <Field
+            label="Título da capa"
+            htmlFor="coverTitle"
+            hint="A manchete, em letras grandes. Com título, a capa entra como primeira página da revista."
+          >
+            <TextInput
+              id="coverTitle"
+              name="coverTitle"
+              maxLength={90}
+              value={cover.coverTitle}
+              onChange={(event) =>
+                setCover((current) => ({ ...current, coverTitle: event.target.value }))
+              }
+            />
+          </Field>
+          <Field label="Subtítulo da capa" htmlFor="coverSubtitle" hint="Uma ou duas linhas abaixo do título.">
+            <TextArea
+              id="coverSubtitle"
+              name="coverSubtitle"
+              rows={2}
+              maxLength={160}
+              value={cover.coverSubtitle}
+              onChange={(event) =>
+                setCover((current) => ({ ...current, coverSubtitle: event.target.value }))
+              }
+            />
+          </Field>
+        </div>
+
+        <div>
+          <p className="mb-1.5 text-[13px] font-semibold text-ink">Prévia da capa</p>
+          <div className="relative aspect-[3/4] w-full max-w-[300px] overflow-hidden rounded-md bg-[#1b1d22] shadow-lg">
+            {cover.coverImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={cover.coverImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            ) : null}
+            {preview ? <CoverOverlay text={preview} /> : null}
+          </div>
+          <p className="mt-1.5 text-xs text-muted">
+            O nome no topo é o nome do site em Configurações (ou o logo, se houver).
+          </p>
+        </div>
+      </FormSection>
+
+      <FormSection
         title="Páginas da revista"
-        description="As páginas que o leitor folheia, na ordem. Sem páginas, a capa leva direto ao Modo Revista."
+        description="As páginas que o leitor folheia, na ordem, depois da capa. Sem páginas, a capa leva direto ao Modo Revista."
       >
         <GalleryField
           name="pages"

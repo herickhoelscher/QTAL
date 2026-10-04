@@ -4,8 +4,15 @@ import Image from "next/image";
 import Link from "@/components/LocalizedLink";
 import { useRef } from "react";
 import { useI18n } from "@/components/I18nProvider";
+import { CoverOverlay } from "@/components/IssueCover";
+import type { CoverText } from "@/lib/issue-cover";
 
-export type ShelfIssue = { slug: string; title: string; cover: string | null };
+export type ShelfIssue = {
+  slug: string;
+  title: string;
+  cover: string | null;
+  coverText: CoverText | null;
+};
 
 /**
  * Faixa "Edicoes anteriores" (padrao da DIFE): fundo vermelho de ponta a ponta,
@@ -93,6 +100,7 @@ export function IssuesShelf({
                         className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                       />
                     ) : null}
+                    {issue.coverText ? <CoverOverlay text={issue.coverText} /> : null}
                   </span>
                   <span className="mt-3 block text-sm font-semibold text-white/90 group-hover:text-white">
                     {issue.title}

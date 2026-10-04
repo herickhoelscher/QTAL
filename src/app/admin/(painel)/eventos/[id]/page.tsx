@@ -10,6 +10,7 @@ import {
   DetailItem,
 } from "@/components/admin/ui";
 import { formatDateShort } from "@/lib/format";
+import { fullPlace } from "@/lib/location";
 import { prisma } from "@/lib/prisma";
 
 const BASE = "/admin/eventos";
@@ -43,7 +44,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         <DetailItem label="Status">{event.status === "PUBLISHED" ? "Publicado" : "Rascunho"}</DetailItem>
         <DetailItem label="Data">{formatDateShort(event.date)}</DetailItem>
         <DetailItem label="Local">{event.location}</DetailItem>
-        <DetailItem label="Região">{event.region}</DetailItem>
+        <DetailItem label="Localização">{fullPlace(event)}</DetailItem>
         <DetailItem label="Categorias">
           {event.categories.map((category) => category.name).join(", ")}
         </DetailItem>

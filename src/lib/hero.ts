@@ -117,3 +117,74 @@ export function heroItem(slide: SlideRow): HeroItem | null {
   }
   return null;
 }
+
+/** Conteudo que pode virar slide: as abas do "Adicionar ao carrossel" no painel. */
+export type HeroCandidate = {
+  id: string;
+  title: string;
+  status: ContentStatus;
+  image: string | null;
+  date: Date | null;
+};
+
+/** Os mais recentes do tipo, ou os que tem o termo no titulo. */
+export async function heroCandidates(
+  type: HeroType,
+  q: string,
+  take: number,
+): Promise<HeroCandidate[]> {
+  const where = q ? { title: { contains: q, mode: "insensitive" as const } } : {};
+  const base = { id: true, title: true, status: true } as const;
+
+  switch (type) {
+    case "article": {
+      const rows = await prisma.article.findMany({
+        where,
+        take,
+        orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
+        select: { ...base, coverImage: true, publishedAt: true },
+      });
+      return rows.map((row) => ({ ...row, image: row.coverImage, date: row.publishedAt }));
+    }
+    case "event": {
+      const rows = await prisma.event.findMany({
+        where,
+        take,
+        orderBy: { date: "desc" },
+        select: { ...base, coverImage: true, date: true },
+      });
+      return rows.map((row) => ({ ...row, image: row.coverImage }));
+    }
+    case "property": {
+      const rows = await prisma.property.findMany({
+        where,
+        take,
+        orderBy: { createdAt: "desc" },
+        select: { ...base, coverImage: true, createdAt: true },
+      });
+      return rows.map((row) => ({ ...row, image: row.coverImage, date: row.createdAt }));
+    }
+    case "video": {
+      const rows = await prisma.video.findMany({
+        where,
+        take,
+        orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
+        select: { ...base, provider: true, embedId: true, customThumbnail: true, publishedAt: true },
+      });
+      return rows.map((row) => ({
+        ...row,
+        image: thumbnailUrl(row.provider, row.embedId, row.customThumbnail),
+        date: row.publishedAt,
+      }));
+    }
+    case "issue": {
+      const rows = await prisma.issue.findMany({
+        where,
+        take,
+        orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
+        select: { ...base, coverImage: true, publishedAt: true },
+      });
+      return rows.map((row) => ({ ...row, image: row.coverImage, date: row.publishedAt }));
+    }
+  }
+}

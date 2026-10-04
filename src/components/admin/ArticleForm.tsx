@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { saveArticle } from "@/app/admin/actions/content";
 import { GalleryField, type GalleryItem } from "@/components/admin/GalleryField";
 import { ImageField } from "@/components/admin/ImageField";
+import { LocationFields } from "@/components/admin/LocationFields";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import {
   Checkbox,
@@ -25,7 +26,9 @@ export type ArticleFormData = {
   body?: string;
   coverImage?: string | null;
   coverAlt?: string | null;
-  region?: string | null;
+  state?: string | null;
+  city?: string | null;
+  neighborhood?: string | null;
   status?: string;
   featured?: boolean;
   publishedAt?: string;
@@ -121,9 +124,12 @@ export function ArticleForm({
           )}
         </fieldset>
 
-        <Field label="Região" htmlFor="region" hint="Usada no filtro regional do dashboard.">
-          <TextInput id="region" name="region" defaultValue={article.region ?? ""} />
-        </Field>
+        <LocationFields
+          state={article.state}
+          city={article.city}
+          neighborhood={article.neighborhood}
+          hint="A cidade é usada no filtro do painel inicial."
+        />
 
         <Field label="Data de publicação" htmlFor="publishedAt">
           <TextInput

@@ -11,6 +11,8 @@ import { parseVideoUrl } from "@/lib/video";
 import type { ActionState } from "@/app/admin/actions/auth";
 import { deleteTranslations, translateRecord } from "@/lib/i18n/content";
 import { compactFeatured, featuredCapacityError, setFeatured } from "@/lib/featured-db";
+import { canonicalNeighborhood, collapseSpaces, isUf } from "@/lib/location";
+import { listNeighborhoods } from "@/lib/location-db";
 
 type GalleryInput = {
   url: string;
@@ -70,6 +72,19 @@ function afterDelete(formData: FormData) {
   if (target.startsWith("/admin/")) redirect(target);
 }
 
+/**
+ * Estado, cidade e bairro vindos do LocationFields. Bairro digitado que ja
+ * existe na cidade com outra grafia ("centro") e gravado como o existente.
+ */
+async function placeFields(formData: FormData) {
+  const uf = text(formData, "state");
+  const state = isUf(uf) ? uf : null;
+  const city = collapseSpaces(text(formData, "city")) || null;
+  const existing = state && city ? await listNeighborhoods(state, city) : [];
+  const neighborhood = city ? canonicalNeighborhood(text(formData, "neighborhood"), existing) : null;
+  return { state, city, neighborhood };
+}
+
 function categoryIds(formData: FormData): string[] {
   return formData.getAll("categories").map(String).filter(Boolean);
 }
@@ -108,7 +123,7 @@ export async function saveArticle(
     body,
     coverImage: optional(formData, "coverImage"),
     coverAlt: optional(formData, "coverAlt"),
-    region: optional(formData, "region"),
+    ...(await placeFields(formData)),
     metaTitle: optional(formData, "metaTitle"),
     metaDescription: optional(formData, "metaDescription"),
     status: nextStatus,
@@ -193,7 +208,7 @@ export async function saveEvent(_state: ActionState, formData: FormData): Promis
       : null,
     date: new Date(dateValue),
     location: optional(formData, "location"),
-    region: optional(formData, "region"),
+    ...(await placeFields(formData)),
     coverImage: optional(formData, "coverImage"),
     coverAlt: optional(formData, "coverAlt"),
     status: status(formData),
@@ -250,13 +265,13 @@ export async function saveProperty(
 
   const id = text(formData, "id");
   const title = text(formData, "title");
-  const city = text(formData, "city");
+  const place = await placeFields(formData);
 
   if (!title) return { error: "O título é obrigatório." };
   const wantsFeatured = formData.get("featured") === "on";
   const featuredError = await featuredCapacityError("property", id || null, wantsFeatured);
   if (featuredError) return { error: featuredError };
-  if (!city) return { error: "Informe a cidade do imóvel." };
+  if (!place.city) return { error: "Informe a cidade do imóvel." };
 
   const slug = await uniqueSlug(text(formData, "slug") || title, async (candidate) => {
     const found = await prisma.property.findUnique({ where: { slug: candidate } });
@@ -270,8 +285,8 @@ export async function saveProperty(
     title,
     slug,
     type: (text(formData, "type") || "CASA") as PropertyType,
-    city,
-    region: optional(formData, "region"),
+    ...place,
+    city: place.city,
     address: optional(formData, "address"),
     price: priceOnRequest ? null : price,
     priceOnRequest,
@@ -442,6 +457,8 @@ export async function saveIssue(_state: ActionState, formData: FormData): Promis
     slug,
     description: optional(formData, "description"),
     coverImage: optional(formData, "coverImage"),
+    coverTitle: optional(formData, "coverTitle"),
+    coverSubtitle: optional(formData, "coverSubtitle"),
     status: nextStatus,
     publishedAt: nextStatus === "PUBLISHED" ? (previous?.publishedAt ?? new Date()) : null,
   };

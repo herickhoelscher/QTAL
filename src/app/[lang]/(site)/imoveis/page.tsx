@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import type { Prisma, PropertyType } from "@prisma/client";
 import { PropertyCard } from "@/components/cards";
+import { PropertyPlaceFilter } from "@/components/PropertyPlaceFilter";
 import { Reveal } from "@/components/Reveal";
 import { EmptyState, PageHeader, Section } from "@/components/ui";
 import { prisma } from "@/lib/prisma";
 import { getDictionary } from "@/lib/i18n/server";
 import { alternatesFor } from "@/lib/i18n/seo";
 import { localize } from "@/lib/i18n/localize";
+import { compareNames, mergeNeighborhoods } from "@/lib/location";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDictionary();
@@ -20,32 +22,42 @@ export async function generateMetadata(): Promise<Metadata> {
 const PROPERTY_TYPES: PropertyType[] = ["CASA", "APARTAMENTO", "TERRENO", "COMERCIAL", "RURAL"];
 
 type Props = {
-  searchParams: Promise<{ cidade?: string; tipo?: string; faixa?: string }>;
+  searchParams: Promise<{ cidade?: string; bairro?: string; tipo?: string; faixa?: string }>;
 };
 
 export default async function PropertiesPage({ searchParams }: Props) {
-  const { cidade = "", tipo = "", faixa = "" } = await searchParams;
+  const { cidade = "", bairro = "", tipo = "", faixa = "" } = await searchParams;
 
   const where: Prisma.PropertyWhereInput = { status: "PUBLISHED" };
   if (cidade) where.city = cidade;
+  if (cidade && bairro) where.neighborhood = { equals: bairro, mode: "insensitive" };
   if (tipo) where.type = tipo as PropertyType;
   if (faixa) {
     const [min, max] = faixa.split("-").map(Number);
     where.price = { ...(min ? { gte: min } : {}), ...(max ? { lte: max } : {}) };
   }
 
-  const [properties, cities] = await Promise.all([
+  const [properties, places] = await Promise.all([
     prisma.property.findMany({
       where,
       orderBy: [{ featuredRank: { sort: "asc", nulls: "last" } }, { createdAt: "desc" }],
     }),
     prisma.property.findMany({
       where: { status: "PUBLISHED" },
-      distinct: ["city"],
-      select: { city: true },
-      orderBy: { city: "asc" },
+      distinct: ["city", "neighborhood"],
+      select: { city: true, neighborhood: true },
     }),
   ]);
+
+  // Cidades em ordem alfabetica, cada uma com os bairros que tem imovel publicado.
+  const neighborhoodsByCity = Object.fromEntries(
+    [...new Set(places.map((row) => row.city))]
+      .sort(compareNames)
+      .map((city) => [
+        city,
+        mergeNeighborhoods(places.filter((row) => row.city === city).map((row) => row.neighborhood)),
+      ]),
+  );
 
   const { t } = await getDictionary();
   await localize([{ model: "property", records: properties }]);
@@ -68,26 +80,19 @@ export default async function PropertiesPage({ searchParams }: Props) {
       <Section>
         <form
           method="get"
-          className="mb-10 grid gap-3 border border-line bg-surface-alt p-4 sm:grid-cols-[1fr_1fr_1fr_auto]"
+          className="mb-10 grid gap-3 border border-line bg-surface-alt p-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto]"
         >
-          <div>
-            <label htmlFor="cidade" className="sr-only">
-              {t.properties.city}
-            </label>
-            <select
-              id="cidade"
-              name="cidade"
-              defaultValue={cidade}
-              className="w-full border border-line bg-surface px-4 py-2.5 text-sm"
-            >
-              <option value="">{t.properties.allCities}</option>
-              {cities.map((row) => (
-                <option key={row.city} value={row.city}>
-                  {row.city}
-                </option>
-              ))}
-            </select>
-          </div>
+          <PropertyPlaceFilter
+            neighborhoodsByCity={neighborhoodsByCity}
+            city={cidade}
+            neighborhood={bairro}
+            labels={{
+              city: t.properties.city,
+              allCities: t.properties.allCities,
+              neighborhood: t.properties.neighborhood,
+              allNeighborhoods: t.properties.allNeighborhoods,
+            }}
+          />
 
           <div>
             <label htmlFor="tipo" className="sr-only">
@@ -144,7 +149,7 @@ export default async function PropertiesPage({ searchParams }: Props) {
                 title={property.title}
                 image={property.coverImage}
                 city={property.city}
-                region={property.region}
+                neighborhood={property.neighborhood}
                 type={property.type}
                 price={property.price ? Number(property.price) : null}
                 priceOnRequest={property.priceOnRequest}

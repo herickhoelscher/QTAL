@@ -12,6 +12,7 @@ import { providerLabel } from "@/lib/video";
 import { getDictionary } from "@/lib/i18n/server";
 import { alternatesFor } from "@/lib/i18n/seo";
 import { localize } from "@/lib/i18n/localize";
+import { placeLabel } from "@/lib/location";
 
 export const revalidate = 300;
 
@@ -75,7 +76,19 @@ export default async function EventPage({ params }: Params) {
     startDate: event.date.toISOString(),
     eventStatus: "https://schema.org/EventScheduled",
     location: event.location
-      ? { "@type": "Place", name: event.location, address: event.region ?? undefined }
+      ? {
+          "@type": "Place",
+          name: event.location,
+          address: event.city
+            ? {
+                "@type": "PostalAddress",
+                streetAddress: event.neighborhood ?? undefined,
+                addressLocality: event.city,
+                addressRegion: event.state ?? undefined,
+                addressCountry: "BR",
+              }
+            : undefined,
+        }
       : undefined,
     image: event.coverImage ? [event.coverImage] : undefined,
     description: event.description ? excerpt(event.description, 300) : undefined,
@@ -101,7 +114,7 @@ export default async function EventPage({ params }: Params) {
           <p className="mt-6 text-sm text-muted">
             {formatDateLong(event.date, locale)}
             {event.location ? " · " + event.location : ""}
-            {event.region ? " · " + event.region : ""}
+            {placeLabel(event) ? " · " + placeLabel(event) : ""}
           </p>
         </div>
       </header>

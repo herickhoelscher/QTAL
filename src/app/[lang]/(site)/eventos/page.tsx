@@ -8,6 +8,7 @@ import { excerpt } from "@/lib/format";
 import { getDictionary } from "@/lib/i18n/server";
 import { alternatesFor } from "@/lib/i18n/seo";
 import { localize } from "@/lib/i18n/localize";
+import { placeLabel } from "@/lib/location";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDictionary();
@@ -19,11 +20,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 type Props = {
-  searchParams: Promise<{ q?: string; categoria?: string; regiao?: string }>;
+  searchParams: Promise<{ q?: string; categoria?: string; cidade?: string }>;
 };
 
 export default async function EventsPage({ searchParams }: Props) {
-  const { q = "", categoria = "", regiao = "" } = await searchParams;
+  const { q = "", categoria = "", cidade = "" } = await searchParams;
 
   const where: Prisma.EventWhereInput = { status: "PUBLISHED" };
   if (q) {
@@ -34,16 +35,16 @@ export default async function EventsPage({ searchParams }: Props) {
     ];
   }
   if (categoria) where.categories = { some: { slug: categoria } };
-  if (regiao) where.region = regiao;
+  if (cidade) where.city = cidade;
 
-  const [events, categories, regions] = await Promise.all([
+  const [events, categories, cities] = await Promise.all([
     prisma.event.findMany({ where, orderBy: [{ featuredRank: { sort: "asc", nulls: "last" } }, { date: "desc" }], include: { categories: true } }),
     prisma.category.findMany({ where: { type: "EVENT" }, orderBy: { name: "asc" } }),
     prisma.event.findMany({
-      where: { status: "PUBLISHED", region: { not: null } },
-      distinct: ["region"],
-      select: { region: true },
-      orderBy: { region: "asc" },
+      where: { status: "PUBLISHED", city: { not: null } },
+      distinct: ["city"],
+      select: { city: true },
+      orderBy: { city: "asc" },
     }),
   ]);
 
@@ -101,22 +102,22 @@ export default async function EventsPage({ searchParams }: Props) {
           </div>
 
           <div>
-            <label htmlFor="regiao" className="sr-only">
-              {t.events.region}
+            <label htmlFor="cidade" className="sr-only">
+              {t.events.city}
             </label>
             <select
-              id="regiao"
-              name="regiao"
-              defaultValue={regiao}
+              id="cidade"
+              name="cidade"
+              defaultValue={cidade}
               className="w-full border border-line bg-surface px-4 py-2.5 text-sm"
             >
-              <option value="">{t.events.allRegions}</option>
-              {regions
-                .map((row) => row.region)
-                .filter((region): region is string => Boolean(region))
-                .map((region) => (
-                  <option key={region} value={region}>
-                    {region}
+              <option value="">{t.events.allCities}</option>
+              {cities
+                .map((row) => row.city)
+                .filter((city): city is string => Boolean(city))
+                .map((city) => (
+                  <option key={city} value={city}>
+                    {city}
                   </option>
                 ))}
             </select>
@@ -143,7 +144,7 @@ export default async function EventsPage({ searchParams }: Props) {
                   categories={event.categories}
                   date={event.date}
                   relative={false}
-                  meta={event.location ?? event.region ?? undefined}
+                  meta={event.location ?? placeLabel(event) ?? undefined}
                   aspect={index % 3 === 1 ? "3/4" : "4/3"}
                   headingLevel={2}
                   priority={index < 3}

@@ -5,6 +5,7 @@ import { CategoryBadge } from "@/components/ui";
 import { formatCurrency, formatDateShort, timeAgo } from "@/lib/format";
 import { getDictionary } from "@/lib/i18n/server";
 import { fmt } from "@/lib/i18n/locales";
+import { placeLabel } from "@/lib/location";
 
 type CardCategory = { name: string; slug: string };
 
@@ -261,7 +262,7 @@ export async function PropertyCard({
   title,
   image,
   city,
-  region,
+  neighborhood,
   type,
   price,
   priceOnRequest,
@@ -276,7 +277,7 @@ export async function PropertyCard({
   title: string;
   image?: string | null;
   city: string;
-  region?: string | null;
+  neighborhood?: string | null;
   type: string;
   price?: number | string | null;
   priceOnRequest: boolean;
@@ -320,7 +321,7 @@ export async function PropertyCard({
       </Link>
 
       <div className="p-5">
-        <p className="eyebrow text-muted">{region ? city + " · " + region : city}</p>
+        <p className="eyebrow text-muted">{placeLabel({ city, neighborhood })}</p>
         <Heading className="mt-2 font-display text-xl leading-snug font-bold italic">
           <Link href={href} className="transition-colors hover:text-brand">
             {title}

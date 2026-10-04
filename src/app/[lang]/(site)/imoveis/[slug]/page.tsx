@@ -66,7 +66,7 @@ export default async function PropertyPage({ params }: Params) {
     { label: t.properties.bathrooms, value: property.bathrooms },
     { label: t.properties.spots, value: property.garageSpots },
     { label: t.properties.city, value: property.city },
-    { label: t.properties.region, value: property.region },
+    { label: t.properties.neighborhood, value: property.neighborhood },
   ].filter((spec) => spec.value !== null && spec.value !== undefined && spec.value !== "");
 
   const contactLink = whatsappLink(

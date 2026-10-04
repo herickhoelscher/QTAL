@@ -53,6 +53,8 @@ export const TRANSLATABLE: Record<ContentModel, FieldSpec[]> = {
   issue: [
     { field: "title", html: false },
     { field: "description", html: false },
+    { field: "coverTitle", html: false },
+    { field: "coverSubtitle", html: false },
   ],
   category: [{ field: "name", html: false }],
   // Textos digitados em Configuracoes: a frase da faixa do topo e a mensagem

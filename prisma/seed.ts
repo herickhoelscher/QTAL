@@ -15,6 +15,11 @@ const prisma = new PrismaClient({
 
 const DAY = 86_400_000;
 
+/** A demo guarda "região" como texto; a cidade e a regiao que nao for "Oeste do Paraná". */
+function placeFromRegion(region: string) {
+  return { state: "PR", city: region === "Oeste do Paraná" ? null : region };
+}
+
 async function main() {
   const passwordHash = await bcrypt.hash("portal2026", 10);
 
@@ -94,7 +99,7 @@ async function main() {
       body: article.body,
       coverImage: article.cover,
       coverAlt: article.title,
-      region: article.region,
+      ...placeFromRegion(article.region),
       status: "PUBLISHED" as const,
       featured: article.featured,
       publishedAt: new Date(Date.now() - index * DAY * 2 - DAY / 4),
@@ -124,7 +129,7 @@ async function main() {
       description: event.description,
       date: new Date(event.date),
       location: event.location,
-      region: event.region,
+      ...placeFromRegion(event.region),
       coverImage: event.cover,
       coverAlt: event.title,
       status: "PUBLISHED" as const,
@@ -157,8 +162,9 @@ async function main() {
     const content = {
       title: property.title,
       type: property.type,
+      state: "PR",
       city: property.city,
-      region: property.region,
+      neighborhood: property.region,
       price: property.price ?? null,
       priceOnRequest: property.priceOnRequest ?? false,
       area: property.area,

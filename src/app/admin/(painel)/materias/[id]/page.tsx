@@ -10,6 +10,7 @@ import {
   DetailItem,
 } from "@/components/admin/ui";
 import { formatDateTime } from "@/lib/format";
+import { fullPlace } from "@/lib/location";
 import { prisma } from "@/lib/prisma";
 
 const BASE = "/admin/materias";
@@ -49,7 +50,7 @@ export default async function ArticleDetailPage({ params }: { params: Promise<{ 
         </DetailItem>
         <DetailItem label="Visualizações">{article.viewCount}</DetailItem>
         <DetailItem label="Endereço da página">/materias/{article.slug}</DetailItem>
-        <DetailItem label="Região">{article.region}</DetailItem>
+        <DetailItem label="Localização">{fullPlace(article)}</DetailItem>
         <DetailItem label="Categorias">
           {article.categories.map((category) => category.name).join(", ")}
         </DetailItem>
