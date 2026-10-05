@@ -13,6 +13,7 @@ import { deleteTranslations, translateRecord } from "@/lib/i18n/content";
 import { compactFeatured, featuredCapacityError, setFeatured } from "@/lib/featured-db";
 import { canonicalNeighborhood, collapseSpaces, isUf } from "@/lib/location";
 import { listNeighborhoods } from "@/lib/location-db";
+import { isShortMapLink, resolveShortMapLink, toMapEmbedUrl } from "@/lib/maps";
 
 type GalleryInput = {
   url: string;
@@ -83,6 +84,25 @@ async function placeFields(formData: FormData) {
   const existing = state && city ? await listNeighborhoods(state, city) : [];
   const neighborhood = city ? canonicalNeighborhood(text(formData, "neighborhood"), existing) : null;
   return { state, city, neighborhood };
+}
+
+/**
+ * Link do mapa do imovel: aceita o link de compartilhar do Google Maps, o da
+ * barra de endereco ou o codigo de "Incorporar um mapa", e grava sempre o
+ * formato que o Google deixa abrir dentro do site.
+ */
+async function mapField(formData: FormData): Promise<{ url: string | null } | { error: string }> {
+  const raw = text(formData, "mapEmbedUrl");
+  if (!raw) return { url: null };
+  const full = isShortMapLink(raw) ? await resolveShortMapLink(raw) : raw;
+  const url = full ? toMapEmbedUrl(full) : null;
+  if (!url) {
+    return {
+      error:
+        "Não consegui ler o link do mapa. No Google Maps, abra o lugar, clique em Compartilhar e cole o link (ou o código de Incorporar um mapa).",
+    };
+  }
+  return { url };
 }
 
 function categoryIds(formData: FormData): string[] {
@@ -272,6 +292,8 @@ export async function saveProperty(
   const featuredError = await featuredCapacityError("property", id || null, wantsFeatured);
   if (featuredError) return { error: featuredError };
   if (!place.city) return { error: "Informe a cidade do imóvel." };
+  const map = await mapField(formData);
+  if ("error" in map) return { error: map.error };
 
   const slug = await uniqueSlug(text(formData, "slug") || title, async (candidate) => {
     const found = await prisma.property.findUnique({ where: { slug: candidate } });
@@ -299,7 +321,7 @@ export async function saveProperty(
       : null,
     coverImage: optional(formData, "coverImage"),
     coverAlt: optional(formData, "coverAlt"),
-    mapEmbedUrl: optional(formData, "mapEmbedUrl"),
+    mapEmbedUrl: map.url,
     tourUrl: optional(formData, "tourUrl"),
     status: status(formData),
   };

@@ -216,7 +216,7 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
         <SaveRow />
       </FormSection>
 
-      <FormSection title="Assinatura e contato">
+      <FormSection title="Anuncie e contato">
         <Field
           label="WhatsApp comercial"
           htmlFor="whatsappNumber"
@@ -236,7 +236,7 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
           wide
           label="Mensagem pré-preenchida"
           htmlFor="whatsappMessage"
-          hint="É o texto que já vem escrito quando a pessoa clica em Assine agora."
+          hint="É o texto que já vem escrito quando a pessoa clica em Entre em contato (Anuncie)."
         >
           <TextArea
             id="whatsappMessage"

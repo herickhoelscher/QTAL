@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { instagramThumbnail } from "@/lib/video";
 
 /**
  * Capa do video com degrade de qualidade.
@@ -16,6 +17,7 @@ import { useState } from "react";
  */
 export function VideoThumb({
   embedId,
+  provider = "YOUTUBE",
   custom,
   alt,
   sizes,
@@ -23,13 +25,20 @@ export function VideoThumb({
   priority = false,
 }: {
   embedId: string;
+  provider?: string;
   custom?: string | null;
   alt: string;
   sizes: string;
   className?: string;
   priority?: boolean;
 }) {
-  const best = custom ?? `https://i.ytimg.com/vi/${embedId}/maxresdefault.jpg`;
+  // Aceita o codigo do banco (INSTAGRAM) ou o rotulo da tela (Instagram).
+  const instagram = provider.toUpperCase() === "INSTAGRAM";
+  // A capa do Instagram passa pelo otimizador do Next: ele segue o
+  // redirecionamento para a CDN deles, que nao deixa o navegador exibi-la direto.
+  const best =
+    custom ??
+    (instagram ? instagramThumbnail(embedId) : `https://i.ytimg.com/vi/${embedId}/maxresdefault.jpg`);
   const [src, setSrc] = useState(best);
 
   return (
@@ -42,7 +51,9 @@ export function VideoThumb({
       sizes={sizes}
       className={className}
       onError={() => {
-        if (!custom) setSrc(`https://i.ytimg.com/vi/${embedId}/hqdefault.jpg`);
+        if (!custom && !instagram) {
+          setSrc(`https://i.ytimg.com/vi/${embedId}/hqdefault.jpg`);
+        }
       }}
     />
   );

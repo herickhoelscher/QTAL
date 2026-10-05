@@ -30,6 +30,15 @@ export function parseVideoUrl(url: string): ParsedVideo | null {
   return null;
 }
 
+/**
+ * Capa publica de um post ou reel do Instagram. O endereco e fixo e
+ * redireciona para a imagem atual na CDN deles (que expira), por isso o site
+ * guarda este e nao o da CDN.
+ */
+export function instagramThumbnail(embedId: string): string {
+  return `https://www.instagram.com/p/${embedId}/media/?size=l`;
+}
+
 export function embedUrl(provider: VideoProvider, embedId: string): string {
   return provider === "YOUTUBE"
     ? `https://www.youtube-nocookie.com/embed/${embedId}?rel=0&modestbranding=1&autoplay=1`
@@ -43,7 +52,7 @@ export function thumbnailUrl(
 ): string | null {
   if (custom) return custom;
   if (provider === "YOUTUBE") return `https://i.ytimg.com/vi/${embedId}/hqdefault.jpg`;
-  return null;
+  return instagramThumbnail(embedId);
 }
 
 export function watchUrl(provider: VideoProvider, embedId: string, externalUrl: string): string {

@@ -14,6 +14,7 @@ import { fmt } from "@/lib/i18n/locales";
 import { getDictionary } from "@/lib/i18n/server";
 import { alternatesFor } from "@/lib/i18n/seo";
 import { localize } from "@/lib/i18n/localize";
+import { addressMapUrl, toMapEmbedUrl } from "@/lib/maps";
 
 export const revalidate = 300;
 
@@ -58,6 +59,13 @@ export default async function PropertyPage({ params }: Params) {
     { model: "video", records: property.videos },
   ]);
   const typeLabel = t.propertyTypes[property.type] ?? property.type;
+
+  // Links gravados antes da conversao (ex.: maps.app.goo.gl) nao abrem no quadro:
+  // nesses casos o mapa sai pelo endereco do imovel.
+  const mapUrl = property.mapEmbedUrl
+    ? (toMapEmbedUrl(property.mapEmbedUrl) ??
+      addressMapUrl([property.address, property.neighborhood, property.city, property.state]))
+    : null;
 
   const specs = [
     { label: t.properties.type, value: typeLabel },
@@ -167,10 +175,10 @@ export default async function PropertyPage({ params }: Params) {
               </p>
             ) : null}
 
-            {property.mapEmbedUrl ? (
+            {mapUrl ? (
               <div className="mt-10 aspect-[16/9] w-full overflow-hidden border border-line">
                 <iframe
-                  src={property.mapEmbedUrl}
+                  src={mapUrl}
                   title={fmt(t.properties.map, { title: property.title })}
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"

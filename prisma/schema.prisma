@@ -326,7 +326,7 @@ model ApiSettings {
   cubAutoUpdate       Boolean   @default(true)
   gtmContainerId      String?
   whatsappNumber      String    @default("5545999999999")
-  whatsappMessage     String    @default("Ola! Gostaria de assinar a revista.")
+  whatsappMessage     String    @default("Olá! Tenho interesse em aparecer no site.")
   instagramUrl        String?
   facebookUrl         String?
   youtubeUrl          String?

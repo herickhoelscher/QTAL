@@ -217,6 +217,7 @@ export async function VideoCard({
         >
           <VideoThumb
             embedId={embedId}
+            provider={provider}
             custom={customThumbnail}
             alt={title}
             priority={priority}

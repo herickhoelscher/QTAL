@@ -209,7 +209,10 @@ A faixa no topo do site é automática:
 Se alguma fonte automática ficar fora do ar, o site continua mostrando o último valor que
 recebeu. A faixa nunca quebra e nunca exibe mensagem de erro para o leitor.
 
-## Botão "Assine agora"
+## Botão "Anuncie" (Entre em contato)
+
+O botão **Anuncie** do topo, o bloco "Tem vontade de aparecer no nosso site?" da página
+inicial e a página **Anuncie** levam ao WhatsApp da equipe, para quem quer aparecer no portal.
 
 Em **Configurações**, o campo **WhatsApp comercial** define para qual número o botão leva, e
 a **mensagem pré-preenchida** define o texto que já vem escrito para a pessoa enviar.

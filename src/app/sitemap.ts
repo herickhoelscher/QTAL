@@ -46,7 +46,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     prisma.category.findMany({ where: { type: "ARTICLE" }, select: { slug: true } }),
   ]);
 
-  const staticRoutes = ["", "/materias", "/eventos", "/imoveis", "/videos", "/edicoes", "/assine", "/sobre"];
+  const staticRoutes = ["", "/materias", "/eventos", "/imoveis", "/videos", "/edicoes", "/anuncie", "/sobre"];
 
   return [
     ...staticRoutes.flatMap((route) =>

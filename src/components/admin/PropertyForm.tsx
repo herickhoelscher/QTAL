@@ -159,9 +159,9 @@ export function PropertyForm({ property = {} }: { property?: PropertyFormData })
         </Field>
 
         <Field
-          label="Mapa (link de incorporação do Google Maps)"
+          label="Mapa (link do Google Maps)"
           htmlFor="mapEmbedUrl"
-          hint="No Google Maps: Compartilhar → Incorporar um mapa → copie apenas o endereço que aparece em src."
+          hint="No Google Maps, abra o lugar, clique em Compartilhar → Copiar link e cole aqui. O código de Incorporar um mapa também funciona."
         >
           <TextInput id="mapEmbedUrl" name="mapEmbedUrl" defaultValue={property.mapEmbedUrl ?? ""} />
         </Field>

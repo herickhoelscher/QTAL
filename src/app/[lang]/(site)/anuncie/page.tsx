@@ -10,11 +10,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t.subscribe.metaTitle,
     description: t.subscribe.metaDescription,
-    alternates: await alternatesFor("/assine"),
+    alternates: await alternatesFor("/anuncie"),
   };
 }
 
-export default async function SubscribePage() {
+export default async function AdvertisePage() {
   const [settings, { t }] = await Promise.all([getSettings(), getDictionary()]);
   const texts = await localizedSettingsTexts(settings);
   const link = whatsappLink(settings.whatsappNumber, texts.whatsappMessage);

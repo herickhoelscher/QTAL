@@ -33,7 +33,7 @@ export async function UtilityBar({
               {phone}
             </a>
           ) : null}
-          <Link href="/assine" className="eyebrow text-white/65 hover:text-white">
+          <Link href="/anuncie" className="eyebrow text-white/65 hover:text-white">
             {t.nav.subscribe}
           </Link>
           <span aria-hidden className="h-3 w-px bg-white/25" />

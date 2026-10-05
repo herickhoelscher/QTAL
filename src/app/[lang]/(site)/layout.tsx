@@ -20,7 +20,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     { label: t.nav.properties, href: "/imoveis" },
     { label: t.nav.videos, href: "/videos" },
     { label: t.nav.issues, href: "/edicoes" },
-    { label: t.nav.subscribe, href: "/assine" },
+    { label: t.nav.subscribe, href: "/anuncie" },
     { label: t.nav.about, href: "/sobre" },
   ];
 
@@ -30,7 +30,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         siteName={settings.siteName}
         logoUrl={settings.clientLogoUrl}
         nav={nav}
-        subscribeHref="/assine"
+        subscribeHref="/anuncie"
         social={{
           instagram: settings.instagramUrl,
           facebook: settings.facebookUrl,
