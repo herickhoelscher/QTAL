@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
     // Cloudflare Images/R2 em producao; os demais hosts cobrem thumbnails do
     // YouTube e as imagens de exemplo usadas no seed de desenvolvimento.
     remotePatterns: [
+      // Imagens enviadas pelo painel (Supabase Storage, bucket publico).
+      { protocol: "https", hostname: "**.supabase.co", pathname: "/storage/v1/object/public/**" },
       { protocol: "https", hostname: "imagedelivery.net" },
       { protocol: "https", hostname: "**.r2.dev" },
       { protocol: "https", hostname: "**.cloudflarestorage.com" },
