@@ -198,12 +198,17 @@ A faixa no topo do site é automática:
 - **Clima e dólar** se atualizam sozinhos. Não há chave nem senha para renovar: as duas
   fontes são abertas. Se a cidade mudar, troque o campo **Cidade do clima** em
   **Configurações**.
-- **CUB** é o único valor manual. O índice é publicado uma vez por mês pelo Sinduscon e não
-  existe uma fonte automática confiável para ele. Quando sair o número novo, vá em
-  **Configurações**, atualize o **Valor do CUB** e o **Mês de referência**.
+- **CUB** também se atualiza sozinho. Todo dia o site confere duas fontes: a tabela do
+  Sinduscon Paraná Oeste (o índice regional de Toledo, escolhido em **Configurações**) e a
+  página do CUB-PR do Sinduscon-PR. Fica a mais recente; se as duas forem do mesmo mês, vale
+  a regional. Na faixa aparece só **CUB**, sem dizer de qual fonte veio; em
+  **Configurações** dá para ver a origem do valor atual.
+- Se quiser um valor diferente, desligue a **atualização automática** em **Configurações** e
+  digite o **Valor do CUB** e o **Mês de referência**. O botão **Atualizar agora** busca de
+  novo nas fontes na hora.
 - Se o campo do CUB ficar vazio, a faixa não fica em branco: ela passa a mostrar o **custo
   médio do m² do IBGE (SINAPI)**, que se atualiza sozinho, identificado como
-  *Custo m² · SINAPI/IBGE*. É outro cálculo, não é o CUB — por isso aparece com outro nome.
+  *Custo m²*. É outro cálculo, não é o CUB — por isso aparece com outro nome.
   Assim que você preencher o CUB, ele volta a ter prioridade.
 
 Se alguma fonte automática ficar fora do ar, o site continua mostrando o último valor que

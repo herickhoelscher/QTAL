@@ -4,7 +4,7 @@ import { refreshCub } from "@/lib/cub-source";
 export const dynamic = "force-dynamic";
 
 /**
- * Atualizacao mensal do CUB.
+ * Verificacao diaria do CUB: so grava quando sai um mes novo em alguma das fontes.
  *
  * Chamada pelo cron da Vercel (ver vercel.json). A Vercel assina a requisicao
  * com o header Authorization: Bearer $CRON_SECRET; sem o segredo configurado,

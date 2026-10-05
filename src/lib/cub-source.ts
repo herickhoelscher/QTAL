@@ -1,118 +1,77 @@
 import "server-only";
+import {
+  REGIONAL_SOURCE_URL,
+  STATE_SOURCE_URL,
+  newestCub,
+  readRegionalRow,
+  readStatePage,
+  type CubIndex,
+  type CubReading,
+} from "@/lib/cub-parse";
 
 /**
  * Leitura automatica do CUB (Custo Unitario Basico da construcao civil).
  *
- * NAO existe API publica e gratuita do CUB — o indice e apurado mensalmente
- * pelos Sinduscons estaduais e publicado na pagina de cada um. O que existe de
- * mais proximo de uma fonte estavel e a tabela de indicadores do Sinduscon
- * Parana Oeste, que traz o CUBOESTE/PR (o indice regional de Toledo, o mais
- * relevante para este cliente) e o CUB/PR estadual, em HTML tabular.
+ * NAO existe API publica e gratuita do CUB: o indice e apurado mensalmente
+ * pelos Sinduscons e publicado nas paginas de cada um. Lemos duas:
  *
- * Por ser leitura de pagina, e "melhor esforco": se o site mudar de layout, a
- * funcao devolve null, a atualizacao automatica nao acontece e o valor anterior
- * continua no ar. A edicao manual no painel nunca deixa de funcionar.
- */
-
-const SOURCE_URL = "https://sindusconparanaoeste.com.br/indicadores";
-
-export type CubIndex = "CUBOESTE/PR" | "CUB/PR";
-
-export type CubReading = {
-  value: number;
-  /** Mes de referencia ja formatado, ex.: "agosto/2026". */
-  reference: string;
-  changePercent: number | null;
-  /** Indice efetivamente lido. */
-  index: CubIndex;
-  sourceUrl: string;
-};
-
-const MONTHS = [
-  "janeiro", "fevereiro", "março", "abril", "maio", "junho",
-  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
-];
-
-/** "03/08/2026" -> "agosto/2026" */
-function formatReference(date: string): string {
-  const match = date.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-  if (!match) return date;
-  const month = MONTHS[Number(match[2]) - 1];
-  return month ? `${month}/${match[3]}` : date;
-}
-
-/** "2.810,49" ou " 2810,49" -> 2810.49 */
-function parseNumber(raw: string): number | null {
-  const clean = raw.replace(/\s|&nbsp;/g, "").replace(/\./g, "").replace(",", ".").replace("%", "");
-  const value = Number(clean);
-  return Number.isFinite(value) ? value : null;
-}
-
-/**
- * Le a linha de um indice na tabela de indicadores. A tabela tem a forma
- * <td>CUBOESTE/PR</td><td>03/08/2026</td><td>2810,49</td><td>3,44%</td>...
- * entao ancoramos no nome do indice e pegamos as tres celulas seguintes.
- */
-function readRow(html: string, index: CubIndex): CubReading | null {
-  const anchor = html.indexOf(index + "</td>");
-  if (anchor < 0) return null;
-
-  const cells = [...html.slice(anchor, anchor + 1200).matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)]
-    .map((match) => match[1].replace(/<[^>]*>/g, "").trim());
-
-  // O corte comeca no texto do indice, ja depois do <td> dele — entao a
-  // primeira celula capturada e a data, nao o nome do indice.
-  const [date, value, change] = cells;
-  if (!date || !value) return null;
-
-  const parsedValue = parseNumber(value);
-  if (parsedValue === null || parsedValue <= 0) return null;
-
-  return {
-    value: parsedValue,
-    reference: formatReference(date),
-    changePercent: change ? parseNumber(change) : null,
-    index,
-    sourceUrl: SOURCE_URL,
-  };
-}
-
-/**
- * Busca o CUB mais recente.
+ * - a tabela do Sinduscon Parana Oeste (CUBOESTE/PR, o regional de Toledo, e
+ *   o CUB/PR), que e a preferida;
+ * - a pagina do CUB-PR do Sinduscon-PR, que costuma sair antes.
  *
- * Qual indice usar e decisao editorial, nao tecnica: o regional (CUBOESTE/PR)
- * e mais preciso para quem anuncia so no oeste do estado; o estadual (CUB/PR)
- * faz mais sentido quando o portal lista imoveis de outras regioes do Parana.
- * Por isso vem das configuracoes, com o outro servindo de reserva caso a linha
- * escolhida nao esteja na pagina.
+ * Fica a mais recente; no empate, a regional. Por ser leitura de pagina, e
+ * "melhor esforco": se as duas mudarem de layout, nada e gravado e o valor
+ * anterior continua no ar. A edicao manual no painel nunca deixa de funcionar.
  */
-export async function fetchCub(preferido: CubIndex = "CUBOESTE/PR"): Promise<CubReading | null> {
+
+export type { CubIndex, CubReading };
+
+/** Valor de cubSource gravado quando o CUB veio da pagina estadual. */
+export const STATE_SOURCE = "sinduscon-pr";
+
+async function fetchPage(url: string): Promise<string | null> {
   try {
-    const res = await fetch(SOURCE_URL, {
+    const res = await fetch(url, {
       headers: {
-        // Sem user-agent de navegador, o servidor do sindicato devolve 403.
+        // Sem user-agent de navegador, os servidores dos sindicatos devolvem 403.
         "User-Agent": "Mozilla/5.0 (compatible; PortalBot/1.0)",
         Accept: "text/html",
       },
-      next: { revalidate: 0 },
+      signal: AbortSignal.timeout(15000),
+      cache: "no-store",
     });
     if (!res.ok) {
-      console.error("[cub] resposta", res.status, "de", SOURCE_URL);
+      console.error("[cub] resposta", res.status, "de", url);
       return null;
     }
-
-    const html = await res.text();
-    const reserva: CubIndex = preferido === "CUBOESTE/PR" ? "CUB/PR" : "CUBOESTE/PR";
-    return readRow(html, preferido) ?? readRow(html, reserva);
+    return await res.text();
   } catch (error) {
-    console.error("[cub] falha ao ler a pagina do Sinduscon:", error);
+    console.error("[cub] falha ao ler", url, error);
     return null;
   }
 }
 
 /**
- * Le a fonte e grava em ApiSettings. Usada tanto pelo job mensal quanto pelo
- * botao "atualizar agora" do painel.
+ * Busca o CUB mais recente. O indice regional escolhido no painel e o
+ * preferido; o outro indice da mesma tabela serve de reserva se a linha sumir.
+ */
+export async function fetchCub(preferido: CubIndex = "CUBOESTE/PR"): Promise<CubReading | null> {
+  const [regionalHtml, stateHtml] = await Promise.all([
+    fetchPage(REGIONAL_SOURCE_URL),
+    fetchPage(STATE_SOURCE_URL),
+  ]);
+  const reserva: CubIndex = preferido === "CUBOESTE/PR" ? "CUB/PR" : "CUBOESTE/PR";
+  const regional = regionalHtml
+    ? (readRegionalRow(regionalHtml, preferido) ?? readRegionalRow(regionalHtml, reserva))
+    : null;
+  const state = stateHtml ? readStatePage(stateHtml) : null;
+  return newestCub(regional, state);
+}
+
+/**
+ * Le as fontes e grava em ApiSettings. Usada pelo job diario e pelo botao
+ * "atualizar agora" do painel. So grava quando o valor ou o mes mudam, entao
+ * a data de "ultima atualizacao" e a da ultima mudanca de verdade.
  *
  * Respeita a chave cubAutoUpdate: se o cliente desligou a atualizacao
  * automatica, o job nao mexe no valor que ele digitou (o botao manual ainda
@@ -120,7 +79,7 @@ export async function fetchCub(preferido: CubIndex = "CUBOESTE/PR"): Promise<Cub
  */
 export async function refreshCub(
   options: { force?: boolean } = {},
-): Promise<{ ok: boolean; reading?: CubReading; reason?: string }> {
+): Promise<{ ok: boolean; changed?: boolean; reading?: CubReading; reason?: string }> {
   const { prisma } = await import("@/lib/prisma");
 
   const settings = await prisma.apiSettings.findUnique({ where: { id: "singleton" } });
@@ -129,28 +88,30 @@ export async function refreshCub(
   }
 
   const reading = await fetchCub((settings?.cubIndex as CubIndex) ?? "CUBOESTE/PR");
-  if (!reading) return { ok: false, reason: "não foi possível ler a página do Sinduscon" };
+  if (!reading) return { ok: false, reason: "não foi possível ler as páginas do Sinduscon" };
 
+  const source = reading.origin === "estadual" ? STATE_SOURCE : "sinduscon";
+  const unchanged =
+    settings?.cubValue !== null &&
+    settings?.cubValue !== undefined &&
+    Number(settings.cubValue) === reading.value &&
+    settings.cubReference === reading.reference &&
+    settings.cubSource === source;
+  if (unchanged && !options.force) return { ok: true, changed: false, reading };
+
+  // cubIndex nao e gravado: e a preferencia do painel, nao o indice lido.
+  const data = {
+    cubValue: reading.value,
+    cubReference: reading.reference,
+    cubChangePercent: reading.changePercent,
+    cubSource: source,
+    cubUpdatedAt: new Date(),
+  };
   await prisma.apiSettings.upsert({
     where: { id: "singleton" },
-    create: {
-      id: "singleton",
-      cubValue: reading.value,
-      cubReference: reading.reference,
-      cubChangePercent: reading.changePercent,
-      cubSource: "sinduscon",
-      cubIndex: reading.index,
-      cubUpdatedAt: new Date(),
-    },
-    update: {
-      cubValue: reading.value,
-      cubReference: reading.reference,
-      cubChangePercent: reading.changePercent,
-      cubSource: "sinduscon",
-      cubIndex: reading.index,
-      cubUpdatedAt: new Date(),
-    },
+    create: { id: "singleton", ...data },
+    update: data,
   });
 
-  return { ok: true, reading };
+  return { ok: true, changed: true, reading };
 }

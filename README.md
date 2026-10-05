@@ -69,7 +69,7 @@ Nenhuma das três exige chave, cadastro ou cartão — não há nada para o clie
   pública, gratuita e estável para o Custo Unitário Básico: o índice é apurado mensalmente
   pelos Sinduscons estaduais e publicado em PDF. O valor vem de `ApiSettings.cubValue`,
   editável no painel. **Se esse campo estiver vazio**, a barra passa a exibir o custo médio
-  do m² do SINAPI pela API do IBGE (SIDRA, tabela 2296), rotulado como `Custo m² · SINAPI/IBGE`
+  do m² do SINAPI pela API do IBGE (SIDRA, tabela 2296), rotulado como `Custo m²`
   — metodologia diferente do CUB, por isso nunca aparece com o nome dele.
 
 Se qualquer fonte falhar, a barra exibe o último valor em cache e, na falta dele, `--`.

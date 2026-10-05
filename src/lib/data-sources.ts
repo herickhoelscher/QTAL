@@ -317,7 +317,10 @@ export async function getCub(): Promise<CubData> {
       updatedAt: settings.cubUpdatedAt ? settings.cubUpdatedAt.toISOString() : null,
       changePercent:
         settings.cubChangePercent !== null ? Number(settings.cubChangePercent) : null,
-      source: settings.cubSource === "sinduscon" ? "sinduscon" : "manual",
+      source:
+        settings.cubSource === "sinduscon" || settings.cubSource === "sinduscon-pr"
+          ? "sinduscon"
+          : "manual",
     };
   }
 

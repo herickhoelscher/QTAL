@@ -155,7 +155,7 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
         <Field
           label="Valor do CUB (R$/m²)"
           htmlFor="cubValue"
-          hint="Preenchido sozinho todo mês pelo índice do Sinduscon Paraná Oeste. Só edite se quiser fixar outro valor — ex.: 2845,71. Em branco, a barra cai para o custo médio do m² do SINAPI/IBGE, identificado como tal."
+          hint="Preenchido sozinho: o site confere todo dia o Sinduscon Paraná Oeste e o Sinduscon-PR e fica com o mais recente. Só edite se quiser fixar outro valor — ex.: 2845,71. Em branco, a barra mostra o custo médio do m² do IBGE com o nome Custo m²."
         >
           <TextInput id="cubValue" name="cubValue" inputMode="decimal" defaultValue={settings.cubValue} />
         </Field>
@@ -196,8 +196,10 @@ export function SettingsForm({ settings }: { settings: SettingsFormData }) {
               <>
                 Última atualização: {settings.cubUpdatedAt}
                 {settings.cubSource === "sinduscon"
-                  ? ` · ${settings.cubIndex}, buscado no Sinduscon`
-                  : settings.cubSource === "manual"
+                  ? ` · ${settings.cubIndex}, buscado no Sinduscon Paraná Oeste`
+                  : settings.cubSource === "sinduscon-pr"
+                    ? " · CUB-PR estadual, buscado no Sinduscon-PR (o regional ainda não tinha este mês)"
+                    : settings.cubSource === "manual"
                     ? " · digitado no painel"
                     : null}
               </>

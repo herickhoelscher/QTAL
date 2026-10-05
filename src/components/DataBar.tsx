@@ -90,9 +90,6 @@ export async function DataBar() {
                   {formatMonthReference(cub.reference, locale)}
                 </span>
               ) : null}
-              {cub.source === "sinapi" ? (
-                <span className="databar-label normal-case">SINAPI/IBGE</span>
-              ) : null}
             </>
           ) : (
             <span className="databar-label">--</span>
